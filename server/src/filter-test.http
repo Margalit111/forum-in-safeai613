@@ -92,3 +92,118 @@ Content-Type: application/json
   "text": "אני מחפשת מתכון לעוגת שוקולד"
 }
 
+### ================================
+### 5️⃣ יצירת AI Profile עם הקטגוריות וההגדרות
+### ================================
+POST http://localhost:3001/filter/ai-profiles
+Content-Type: application/json
+
+{
+  "name": "programming-only-assistant",
+
+  "allowedCategories": [
+    "Core Concepts of programming",
+    "Frameworks & Languages (programming)",
+    "Modern Tools & AI Infrastructure (programming)",
+    "Web & Infrastructure (programming)",
+    "Testing & Quality Assurance (programming)",
+    "Infrastructure & Cloud (AWS & DevOps)",
+    "Databases & Optimization (programming)",
+    "Authentication & Security (programming)",
+    "Questions & Context in devellopment (programming)"
+  ],
+
+  "blockedCategories": [
+    "בידור ותרבות",
+    "משפחה וילדים",
+    "בישול ואוכל",
+    "טיולים ונופש",
+    "בריאות וספורט",
+    "House Maintenance & Cleaning",
+    "Shopping",
+    "General Life Advice",
+    "Lifestyle",
+    "Entertainment & Leisure",
+    "Health"
+  ],
+
+  "thresholdAllowed": 0.25,
+  "thresholdBlocked": 0.25,
+  "similarityMargin": 0.05,
+
+  "createdBy": "system",
+  "creatorEmail": "admin@safeai.local",
+
+  "contentPrompts": [
+    "Answer only questions related to software development and programming.",
+    "If the question is not related to programming, politely refuse."
+  ],
+
+  "behaviorPrompts": [
+    "Respond in a professional developer tone.",
+    "Provide concise technical explanations with examples when relevant."
+  ],
+
+  "knowledgePrompts": [
+    "Use examples from real programming languages and frameworks.",
+    "Prefer modern development practices and tools."
+  ]
+}
+
+### ================================
+### 6️⃣ בדיקת הערכת טקסט עם ה-AI Profile החדש - אמור להיות TRUE
+### ================================
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "69a80a2128be7b3daa47622b",
+  "text": "What is the best pasta recipe?"
+}
+
+### ================================
+### 7️⃣ בדיקת הערכת טקסט עם ה-AI Profile החדש - אמור להיות FALSE
+### ================================
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "69a80a2128be7b3daa47622b",
+  "text": "How do I create an Express middleware?"
+}
+
+
+
+
+### בדיקה 1: טקסט שאמור לעבור (תכנות)
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+    "profileId": "69a80a2128be7b3daa47622b",
+    "text": "How do I implement a binary search tree in TypeScript?"
+}
+
+###
+
+### בדיקה 2: טקסט שאמור להיחסם (בישול/פנאי)
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+    "profileId": "69a80a2128be7b3daa47622b",
+    "text": "איך מכינים עוגת שוקולד טובה?"
+}
+
+###
+
+### בדיקה 3: טקסט "גבולי" שיפעיל את ה-LLM
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+    "profileId": "69a80a2128be7b3daa47622b",
+    "text": "I want to take a break from coding and go for a walk in the park"
+}

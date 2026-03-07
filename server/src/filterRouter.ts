@@ -3,229 +3,339 @@ import mongoose from "mongoose";
 import logger from "./logger";
 import OpenAI from "openai";
 
-const embeddingCache: Record<
-  string,
-  { allowed: number[][]; blocked: number[][] }
-> = {};
-
-async function loadCache() {
-  const scopes = await Embedding.distinct("scope");
-
-  for (const scope of scopes) {
-    const docs = await Embedding.find({ scope }).lean();
-
-    embeddingCache[scope] = {
-      allowed: docs.filter((d) => d.type === "allowed").map((d) => d.vector),
-      blocked: docs.filter((d) => d.type === "blocked").map((d) => d.vector),
-    };
-  }
-
-  console.log("Cache loaded:", Object.keys(embeddingCache));
-}
+/* ============================================================
+   OpenAI Client
+============================================================ */
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-console.log("API KEY exists:", !!process.env.OPENAI_API_KEY);
 
-const uri =
+logger.info("OpenAI API Key loaded: " + !!process.env.OPENAI_API_KEY);
+
+/* ============================================================
+   Mongo Connection
+============================================================ */
+
+const MONGO_URI =
   "mongodb+srv://sh0504128171_db_user:bsdbsdbsd@autodidact-cluster.dbyvpmf.mongodb.net/filtersdk?retryWrites=true&w=majority";
+// "mongodb://localhost:27017/"
 
-async function startFilter() {
+async function connectDatabase() {
   try {
-    await mongoose.connect(uri);
-    console.log("Connected to MongoDB...");
-
-    await loadCache();
+    await mongoose.connect(MONGO_URI);
+    logger.info("MongoDB connected successfully");
+    await loadEmbeddingCache();
   } catch (err) {
-    console.error("Could not connect:", err);
+    logger.error("Mongo connection failed", err);
   }
 }
 
-startFilter();
+connectDatabase();
 
+/* ============================================================
+   Schemas
+============================================================ */
 
-const EmbeddingSchema = new mongoose.Schema({
-  scope: {
-    type: String,
-    required: true,
-    lowercase: true,
-    trim: true,
+const AIProfileSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+
+    allowedCategories: [{ type: String, lowercase: true, trim: true }],
+    blockedCategories: [{ type: String, lowercase: true, trim: true }],
+
+    thresholdAllowed: { type: Number, default: 0.25 },
+    thresholdBlocked: { type: Number, default: 0.25 },
+    similarityMargin: { type: Number, default: 0.05 },
+
+    createdBy: { type: String, required: true },
+    creatorEmail: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    contentPrompts: [String],
+    behaviorPrompts: [String],
+    knowledgePrompts: [String],
   },
-  type: {
-    type: String,
-    enum: ["allowed", "blocked"],
-    required: true,
+  { timestamps: true },
+);
+
+const AIProfile = mongoose.model("AIProfile", AIProfileSchema, "ai-profiles");
+
+const EmbeddingSchema = new mongoose.Schema(
+  {
+    category: { type: String, required: true, lowercase: true, trim: true },
+    originText: { type: String, required: true },
+    vector: { type: [Number], required: true },
   },
-  topic: {
-    type: String,
-    required: true,
-  },
-  vector: {
-    type: [Number],
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true },
+);
 
 const Embedding = mongoose.model("Embedding", EmbeddingSchema);
 
-const PromptSchema = new mongoose.Schema({
-  code: String,
-  scope: String,
-  content: String,
-  description: String,
-  createdAt: { type: Date, default: Date.now },
-  status: { type: String, enum: ["לבדיקה", "בשימוש", "ישן"] },
-});
+const PromptSchema = new mongoose.Schema(
+  {
+    code: String,
+    category: String,
+    content: String,
+    description: String,
+    status: { type: String, enum: ["לבדיקה", "בשימוש", "ישן"] },
+  },
+  { timestamps: true },
+);
 
 const Prompt = mongoose.model("Prompt", PromptSchema);
 
-console.log("Prompt collection:", Prompt.collection.name);
-console.log("Embedding collection:", Embedding.collection.name);
+const EvaluationLogSchema = new mongoose.Schema(
+  {
+    profileId: { type: mongoose.Schema.Types.ObjectId, ref: "AIProfile" },
+    text: String,
+    vectorScores: {
+      bestAllowed: Number,
+      bestBlocked: Number,
+    },
+    initialDecision: String, // 'allowed', 'blocked-category', 'low-confidence'
+    llmFinalDecision: String, // 'allowed' or 'blocked'
+    isManuallyReviewed: { type: Boolean, default: false },
+  },
+  { timestamps: true },
+);
+
+const EvaluationLog = mongoose.model("EvaluationLog", EvaluationLogSchema);
+/* ============================================================
+   Embedding Cache
+============================================================ */
+
+const embeddingCache: Record<string, number[][]> = {};
+
+async function loadEmbeddingCache() {
+  const categories = await Embedding.distinct("category");
+
+  for (const category of categories) {
+    const docs = await Embedding.find({ category }).lean();
+
+    embeddingCache[category] = docs.map((d) => d.vector);
+  }
+
+  logger.info(
+    "Embedding cache loaded: " + Object.keys(embeddingCache).join(", "),
+  );
+}
+/* ============================================================
+   Router
+============================================================ */
 
 const router = express.Router();
 
-router.get("/test", (req, res) => {
-  res.send("Filter Router is working!");
+router.get("/health", (_req, res) => {
+  res.send("AI Filter Service running");
 });
 
-router.get("/getFilterEmbedding/", async (req: Request, res: Response) => {
-  logger.info(
-    "Received request for getFilterEmbedding with scopes: " + req.query.scopes,
-  );
+/* ================================
+   Embedding CRUD
+================================ */
+
+router.get("/embeddings", async (req: Request, res: Response) => {
   try {
-    const { scopes } = req.query;
+    const categories = req.query.categories;
 
-    let scopesArray: string[] = [];
-
-    if (Array.isArray(scopes)) {
-      scopesArray = scopes as string[];
-    } else if (typeof scopes === "string") {
-      scopesArray = [scopes];
-    }
+    const categoriesArray: string[] = Array.isArray(categories)
+      ? (categories as string[])
+      : typeof categories === "string"
+        ? [categories]
+        : [];
 
     const data = await Embedding.find({
-      scope: { $in: scopesArray },
+      category: { $in: categoriesArray },
     });
 
     res.json(data);
-  } catch (error) {
-    res.status(500).send("Error fetching embeddings");
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch embeddings" });
   }
 });
 
-
-router.get("/getFilterPrompts", async (req: Request, res: Response) => {
-  logger.info(
-    "Received request for getFilterPrompts with scopes: " + req.query.scopes,
-  );
+router.post("/embeddings", async (req: Request, res: Response) => {
   try {
-    const { scopes } = req.query;
-
-    let scopesArray: string[] = [];
-
-    if (Array.isArray(scopes)) {
-      scopesArray = scopes as string[];
-    } else if (typeof scopes === "string") {
-      scopesArray = [scopes];
-    }
-    logger.debug("Parsed scopes array: " + JSON.stringify(scopesArray));
-    const prompts = await Prompt.find({
-      scope: { $in: scopesArray },
-    });
-
-    res.json(prompts);
-  } catch (error) {
-    res.status(500).send("Error fetching prompts");
-  }
-});
-
-router.post("/create-embedding", async (req, res) => {
-  try {
-
-    const { scope, type, topic } = req.body;
-
+    const { category, type, originText } = req.body;
 
     const response = await openai.embeddings.create({
       model: "text-embedding-3-small",
-      input: topic,
+      input: originText,
     });
-
 
     const vector = response.data?.[0]?.embedding;
+    if (!vector) return res.status(500).json({ error: "Embedding failed" });
 
-    if (!vector) {
-      console.log("No vector returned");
-      return res.status(500).json({ error: "Embedding generation failed" });
-    }
+    await Embedding.create({ category, originText, vector });
 
-    await Embedding.create({
-      scope,
-      type,
-      topic,
-      vector,
-    });
-
-    console.log("Saved to DB");
+    embeddingCache[category] ??= [];
+    embeddingCache[category].push(vector);
 
     res.json({ success: true });
   } catch (err) {
-    console.error("ERROR:", err);
+    logger.error("Embedding creation error", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-router.post("/is-allowed", async (req, res) => {
-  const { scope, text } = req.body;
+/* ================================
+   AI Profiles
+================================ */
 
-  if (!embeddingCache[scope]) {
-    return res.status(400).json({ error: "Scope not loaded" });
+router.post("/ai-profiles", async (req, res) => {
+  try {
+    const profile = await AIProfile.create(req.body);
+    res.json({ success: true, profile });
+  } catch (err) {
+    logger.error("Create profile error", err);
+    res.status(500).json({ error: "Server error" });
   }
-
-  const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: text,
-  });
-
-  const inputVector = response.data?.[0]?.embedding;
-  if (!inputVector) {
-    return res.status(500).json({ error: "Embedding failed" });
-  }
-
-  const { allowed, blocked } = embeddingCache[scope];
-
-  const maxAllowed = Math.max(...allowed.map((v) => cosine(inputVector, v)));
-
-  const maxBlocked = Math.max(...blocked.map((v) => cosine(inputVector, v)));
-
-  const diff = maxAllowed - maxBlocked;
-
-  const MIN_CONF = 0.75;
-  const MIN_MARGIN = 0.05;
-
-  if (maxBlocked > MIN_CONF && maxBlocked > maxAllowed) {
-    return res.json({ allowed: false });
-  }
-
-  if (maxAllowed > MIN_CONF && diff > MIN_MARGIN) {
-    return res.json({ allowed: true });
-  }
-
-  return res.json({ allowed: false });
 });
 
-function cosine(a: number[], b: number[]): number {
-  if (!a || !b || a.length === 0 || b.length === 0) {
-    return 0;
-  }
+router.get("/ai-profiles", async (_req, res) => {
+  const profiles = await AIProfile.find().sort({ createdAt: -1 });
+  res.json(profiles);
+});
 
-  if (a.length !== b.length) {
-    return 0;
+/* ================================
+   Filtering
+================================ */
+
+router.post("/evaluate", async (req, res) => {
+  try {
+    const { profileId, text } = req.body;
+
+    if (!profileId || !text) {
+      return res.status(400).json({
+        error: "profileId and text are required",
+      });
+    }
+
+    const profile = await AIProfile.findById(profileId);
+
+    if (!profile) {
+      return res.status(404).json({
+        error: "AIProfile not found",
+      });
+    }
+
+    /* =========================
+       Create embedding
+    ========================= */
+
+    const response = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: text,
+    });
+
+    const inputVector = response.data?.[0]?.embedding;
+
+    if (!inputVector) {
+      return res.status(500).json({
+        error: "Embedding failed",
+      });
+    }
+
+    let bestAllowed = 0;
+    let bestBlocked = 0;
+
+    /* =========================
+       Check allowed categories
+    ========================= */
+
+    for (const category of profile.allowedCategories) {
+      const vectors = embeddingCache[category];
+      if (!vectors) continue;
+
+      for (const vector of vectors) {
+        const score = cosineSimilarity(inputVector, vector);
+        if (score > bestAllowed) bestAllowed = score;
+      }
+    }
+
+    /* =========================
+       Check blocked categories
+    ========================= */
+
+    for (const category of profile.blockedCategories) {
+      const vectors = embeddingCache[category];
+      if (!vectors) continue;
+
+      for (const vector of vectors) {
+        const score = cosineSimilarity(inputVector, vector);
+        if (score > bestBlocked) bestBlocked = score;
+      }
+    }
+
+    const diff = bestAllowed - bestBlocked;
+
+    logger.info(
+      `Profile=${profile.name} | allowed=${bestAllowed.toFixed(
+        4,
+      )} blocked=${bestBlocked.toFixed(4)} diff=${diff.toFixed(4)}`,
+    );
+
+    /* =========================
+       Decision Logic
+    ========================= */
+
+    let finalAllowed = false;
+    let reason = "low-confidence";
+
+    // לוגיקה בסיסית של ה-Embeddings
+    if (bestBlocked > profile.thresholdBlocked && bestBlocked > bestAllowed) {
+      reason = "blocked-category";
+    } else if (
+      bestAllowed > profile.thresholdAllowed &&
+      diff > profile.similarityMargin
+    ) {
+      finalAllowed = true;
+      reason = "passed-vector";
+    }
+
+    // שלב הגיבוי: אם נחסם או שיש ביטחון נמוך - שולחים ל-GPT
+    if (!finalAllowed) {
+      logger.info(
+        `Low confidence or blocked by vector. Consulting GPT-4o-mini...`,
+      );
+      const isSafeByLLM = await getLLMDecision(text, profile.name, profile.allowedCategories.join(", ")+ "" + profile.blockedCategories.join(", "));
+
+      if (isSafeByLLM) {
+        finalAllowed = true;
+        reason = "allowed-by-llm";
+      } else {
+        reason = "blocked-by-llm";
+      }
+    }
+
+    // שמירה לדאטה-בייס לצורך מעקב ושיפור המערכת בעתיד
+    await EvaluationLog.create({
+      profileId: profile._id,
+      text,
+      vectorScores: { bestAllowed, bestBlocked },
+      initialDecision: reason,
+      llmFinalDecision: finalAllowed ? "allowed" : "blocked",
+    });
+
+    return res.json({
+      allowed: finalAllowed,
+      reason: reason,
+    });
+  } catch (err) {
+    logger.error("Evaluate error", err);
+    res.status(500).json({ error: "Server error" });
   }
+});
+/* ============================================================
+   Helpers
+============================================================ */
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (!a || !b || a.length !== b.length) return 0;
 
   let dot = 0;
   let normA = 0;
@@ -233,14 +343,46 @@ function cosine(a: number[], b: number[]): number {
 
   for (let i = 0; i < a.length; i++) {
     dot += a[i]! * b[i]!;
-    normA += a[i]! * a[i]!;
-    normB += b[i]! * b[i]!;
+    normA += a[i]! ** 2;
+    normB += b[i]! ** 2;
   }
 
   const denominator = Math.sqrt(normA) * Math.sqrt(normB);
-
-  if (denominator === 0) return 0;
-
-  return dot / denominator;
+  return denominator === 0 ? 0 : dot / denominator;
 }
+
+async function getLLMDecision(
+  text: string,
+  profileName: string,
+  profileDesc: string,
+): Promise<boolean> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are a content filter for the profile: ${profileName} - ${profileDesc}. Your task is to determine if the text is safe and appropriate according to conservative education values. Respond only with "allowed" or "blocked".`,
+        },
+        { role: "user", content: text },
+      ],
+      max_tokens: 5,
+      temperature: 0,
+    });
+
+    // שימוש ב-Optional Chaining (?) ובדיקת קיום תוכן
+    const content = response.choices?.[0]?.message?.content;
+
+    if (!content) {
+      return false; // אם אין תוכן, נחמיר ונחסום
+    }
+
+    const decision = content.toLowerCase().trim();
+    return decision === "allowed";
+  } catch (error) {
+    logger.error("LLM Decision failed", error);
+    return false;
+  }
+}
+
 export default router;
