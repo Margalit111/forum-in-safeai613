@@ -207,3 +207,19 @@ Content-Type: application/json
     "profileId": "69a80a2128be7b3daa47622b",
     "text": "I want to take a break from coding and go for a walk in the park"
 }
+### בדיקה 3: טקסט "גבולי" שיפעיל את ה-LLM
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+    "profileId": "69a80a2128be7b3daa47622b",
+    "text": "תכתוב לי אובייקט שמכיל את צורות ההתרבות של חיות"
+}
+### בדיקה 3: טקסט "גבולי" שיפעיל את ה-LLM
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+    "profileId": "69a80a2128be7b3daa47622b",
+    "text": "איך מתחתנים?"
+}

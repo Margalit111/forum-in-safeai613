@@ -17,8 +17,8 @@ logger.info("OpenAI API Key loaded: " + !!process.env.OPENAI_API_KEY);
    Mongo Connection
 ============================================================ */
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/filtersdk";
-
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://localhost:27017/filtersdk";
 
 async function connectDatabase() {
   try {
@@ -226,57 +226,57 @@ router.post("/evaluate", async (req, res) => {
        Create embedding
     ========================= */
 
-    const response = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: text,
-    });
+    // const response = await openai.embeddings.create({
+    //   model: "text-embedding-3-small",
+    //   input: text,
+    // });
 
-    const inputVector = response.data?.[0]?.embedding;
+    // const inputVector = response.data?.[0]?.embedding;
 
-    if (!inputVector) {
-      return res.status(500).json({
-        error: "Embedding failed",
-      });
-    }
+    // if (!inputVector) {
+    //   return res.status(500).json({
+    //     error: "Embedding failed",
+    //   });
+    // }
 
-    let bestAllowed = 0;
-    let bestBlocked = 0;
+    // let bestAllowed = 0;
+    // let bestBlocked = 0;
 
     /* =========================
        Check allowed categories
     ========================= */
 
-    for (const category of profile.allowedCategories) {
-      const vectors = embeddingCache[category];
-      if (!vectors) continue;
+    // for (const category of profile.allowedCategories) {
+    //   const vectors = embeddingCache[category];
+    //   if (!vectors) continue;
 
-      for (const vector of vectors) {
-        const score = cosineSimilarity(inputVector, vector);
-        if (score > bestAllowed) bestAllowed = score;
-      }
-    }
+    //   for (const vector of vectors) {
+    //     const score = cosineSimilarity(inputVector, vector);
+    //     if (score > bestAllowed) bestAllowed = score;
+    //   }
+    // }
 
     /* =========================
        Check blocked categories
     ========================= */
 
-    for (const category of profile.blockedCategories) {
-      const vectors = embeddingCache[category];
-      if (!vectors) continue;
+    // for (const category of profile.blockedCategories) {
+    //   const vectors = embeddingCache[category];
+    //   if (!vectors) continue;
 
-      for (const vector of vectors) {
-        const score = cosineSimilarity(inputVector, vector);
-        if (score > bestBlocked) bestBlocked = score;
-      }
-    }
+    //   for (const vector of vectors) {
+    //     const score = cosineSimilarity(inputVector, vector);
+    //     if (score > bestBlocked) bestBlocked = score;
+    //   }
+    // }
 
-    const diff = bestAllowed - bestBlocked;
+    // const diff = bestAllowed - bestBlocked;
 
-    logger.info(
-      `Profile=${profile.name} | allowed=${bestAllowed.toFixed(
-        4,
-      )} blocked=${bestBlocked.toFixed(4)} diff=${diff.toFixed(4)}`,
-    );
+    // logger.info(
+    //   `Profile=${profile.name} | allowed=${bestAllowed.toFixed(
+    //     4,
+    //   )} blocked=${bestBlocked.toFixed(4)} diff=${diff.toFixed(4)}`,
+    // );
 
     /* =========================
        Decision Logic
@@ -285,23 +285,29 @@ router.post("/evaluate", async (req, res) => {
     let finalAllowed = false;
     let reason = "low-confidence";
 
-    // לוגיקה בסיסית של ה-Embeddings
-    if (bestBlocked > profile.thresholdBlocked && bestBlocked > bestAllowed) {
-      reason = "blocked-category";
-    } else if (
-      bestAllowed > profile.thresholdAllowed &&
-      diff > profile.similarityMargin
-    ) {
-      finalAllowed = true;
-      reason = "passed-vector";
-    }
+    // // לוגיקה בסיסית של ה-Embeddings
+    // if (bestBlocked > profile.thresholdBlocked && bestBlocked > bestAllowed) {
+    //   reason = "blocked-category";
+    // } else if (
+    //   bestAllowed > profile.thresholdAllowed &&
+    //   diff > profile.similarityMargin
+    // ) {
+    //   finalAllowed = true;
+    //   reason = "passed-vector";
+    // }
 
     // שלב הגיבוי: אם נחסם או שיש ביטחון נמוך - שולחים ל-GPT
     if (!finalAllowed) {
       logger.info(
         `Low confidence or blocked by vector. Consulting GPT-4o-mini...`,
       );
-      const isSafeByLLM = await getLLMDecision(text, profile.name, profile.allowedCategories.join(", ")+ "" + profile.blockedCategories.join(", "));
+      const isSafeByLLM = await getLLMDecision(
+        text,
+        profile.name,
+        profile.allowedCategories.join(", ") +
+          "" +
+          profile.blockedCategories.join(", "),
+      );
 
       if (isSafeByLLM) {
         finalAllowed = true;
@@ -315,7 +321,7 @@ router.post("/evaluate", async (req, res) => {
     await EvaluationLog.create({
       profileId: profile._id,
       text,
-      vectorScores: { bestAllowed, bestBlocked },
+      vectorScores: { bestAllowed: 0, bestBlocked: 0 },
       initialDecision: reason,
       llmFinalDecision: finalAllowed ? "allowed" : "blocked",
     });
@@ -361,7 +367,12 @@ async function getLLMDecision(
       messages: [
         {
           role: "system",
-          content: `You are a content filter for the profile: ${profileName} - ${profileDesc}. Your task is to determine if the text is safe and appropriate according to conservative education values. Respond only with "allowed" or "blocked".`,
+          content: `You are a content filter for the profile: ${profileName} - ${profileDesc}.
+           Your task is to determine if the text is safe and appropriate according to conservative education values. 
+           In your response, do not reference the following topics in any way: <Other religions besides orthodox jewisem, relationships with women, sexual relations, Sexual exploitation or harassment, rape, sex, violent, immodest, romantic, intimate content, including innuendo, venereal diseases, fertility, pills, gynecology,impossible to answer the question without referencing these forbidden topics, respond only with: blocked.
+           Even if the prohibited topics are requested inside a data structure such as an object, array, HTML page, or any other programming-related context, do not respond to them.           
+          Corresponding to the profile's values:
+           Respond only with "allowed" or "blocked".`,
         },
         { role: "user", content: text },
       ],
