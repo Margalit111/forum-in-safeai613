@@ -17,9 +17,8 @@ logger.info("OpenAI API Key loaded: " + !!process.env.OPENAI_API_KEY);
    Mongo Connection
 ============================================================ */
 
-const MONGO_URI =
-  "mongodb+srv://sh0504128171_db_user:bsdbsdbsd@autodidact-cluster.dbyvpmf.mongodb.net/filtersdk?retryWrites=true&w=majority";
-// "mongodb://localhost:27017/"
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/filtersdk";
+
 
 async function connectDatabase() {
   try {

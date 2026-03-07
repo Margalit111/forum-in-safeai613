@@ -3,7 +3,7 @@ import AppLayout from "../layout/AppLayout";
 import HomePage from "../pages/HomePage";
 import ExamplePage from "../features/example/ExamplePage";
 import NotFound from "../pages/NotFound";
-import SafeFilterAdmin from "../pages/FilterAdminPage";
+// import SafeFilterAdmin from "../pages/FilterAdminPage";
 
 export default function AppRouter() {
   return (
