@@ -16,7 +16,7 @@ export default function AppRouter() {
           {/* בהמשך */}
           {/* <Route path="/users" element={<UsersPage />} /> */}
           {/* <Route path="/groups" element={<GroupsPage />} /> */}
-          <Route path="/filter-admin" element={<SafeFilterAdmin />} />
+          {/* <Route path="/filter-admin" element={<SafeFilterAdmin />} /> */}
 
           <Route path="*" element={<NotFound />} />
         </Route>
