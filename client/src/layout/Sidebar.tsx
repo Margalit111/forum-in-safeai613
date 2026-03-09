@@ -10,6 +10,9 @@ const navItems = [
   { to: "/api-keys", label: "API Keys" },
   { to: "/stats", label: "Usage" },
   { to: "/example", label: "Example (Redux)" },
+  { to: "/tabl_data", label: "tabl_data" },
+  { to: "/data-history", label: "data-history" },
+  { to: "/filter-admin", label: "Filter Admin" },
 ];
 
 export default function Sidebar() {

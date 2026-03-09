@@ -1,9 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import OpenAI from "openai";
-
-console.log("KEY:", process.env.OPENAI_API_KEY?.slice(0, 5));
-
+import filterRouter from "./filterRouter"; // ייבוא הראוטר
+import logger from "./logger";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,15 +13,24 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// הוספת הראוטר לאפליקציה
+app.use("/filter", filterRouter); // הוספת הראוטר
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+//---------------continue613------------------
 app.post("/api/embed", async (req, res) => {
+  logger.info(
+    "Received request for embed with text: " +
+      req.body.text +
+      " || date and time: " +
+      new Date().toISOString(),
+  );
   try {
-    
     const { text } = req.body;
-    console.log("embed",text);
+    console.log("embed", text);
 
     if (!text) {
       return res.status(400).json({ error: "missing text" });
@@ -34,12 +42,23 @@ app.post("/api/embed", async (req, res) => {
     });
 
     res.json({
-      embedding: response.data[0]?.embedding||[],
+      embedding: response.data[0]?.embedding || [],
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "embedding failed" });
   }
+});
+app.get("/api/retry/:id", async (req, res) => {
+  logger.info(
+    "Received request for retry: " +
+      req.params.id +
+      " || date and time: " +
+      new Date().toISOString(),
+  );
+  res.json({
+    isAllowed: true,
+  });
 });
 
 app.listen(PORT, () => {
