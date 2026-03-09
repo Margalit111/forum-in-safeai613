@@ -1,4 +1,4 @@
-import React, { useState, useEffect, type ChangeEvent } from 'react';
+import React, { useState, type ChangeEvent } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateTask, type Task } from './tasksSlice';
@@ -19,21 +19,11 @@ const UpdateTask: React.FC = () => {
         state.tasks.todos.find(t => t.id === numericId)
     );
 
-    const [title, setTitle] = useState<string>('');
-    const [desc, setDesc] = useState<string>('');
-    const [date, setDate] = useState<string>('');
-    const [img, setImg] = useState<string | null | ArrayBuffer>(null);
-    const [isCompleted, setIsCompleted] = useState<boolean>(false);
-
-    useEffect(() => {
-        if (task) {
-            setTitle(task.title);
-            setDesc(task.desc);
-            setDate(task.date);
-            setImg(task.img);
-            setIsCompleted(task.isCompleted);
-        }
-    }, [task]);
+   const [title, setTitle] = useState(task?.title || '');
+const [desc, setDesc] = useState(task?.desc || '');
+const [date, setDate] = useState(task?.date || '');
+const [img, setImg] = useState(task?.img || null);
+const [isCompleted, setIsCompleted] = useState(task?.isCompleted || false);
 
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -64,7 +54,7 @@ const UpdateTask: React.FC = () => {
                 <input type="text" value={desc} onChange={(e) => setDesc(e.target.value)} />
                 <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                 <input type="file" accept="image/*" onChange={handleImageChange} />
-                {img && typeof img === 'string' && <img src={img} style={{ width: "100px" }} />}
+                {img && typeof img === 'string' && <img src={img} alt="task" style={{ width: "100px" }} />}
                 <label>
                     Completed:
                     <input type="checkbox" checked={isCompleted} onChange={(e) => setIsCompleted(e.target.checked)} />
