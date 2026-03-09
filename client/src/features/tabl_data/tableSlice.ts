@@ -64,7 +64,7 @@ interface TableState {
   userTable: User[];
   groupTable: Group[];
 }
-
+///יצאנוו מערכים מיסוג המחלקותתת שליי
 const initialState: TableState = {
   userTable: [
     { id: 1, name: "שושי", age: 22 },

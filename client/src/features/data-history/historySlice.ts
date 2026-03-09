@@ -25,9 +25,12 @@ const initialState: HistoryState = {
   totalGroupCount: 1500,
   totalActiveSubscriptions: 3500,
   totalChatCount: 1200000,
+   //גרף ראשון
   weeklyChatCounts: [50, 100, 400, 0, 800, 50, 0],
+  //גרף שני
   weeklyApiRequests: [10, 50, 70, 500, 600, 60, 0],
   dailyNewUsers: 0,
+  //גרף שלישי
   weeklyNewUsers: [5, 20, 15, 30, 25, 10, 0],
 };
 
@@ -53,6 +56,7 @@ export const historySliceActions = createSlice({
     incrementTotalChatCount(state: HistoryState) {
       state.totalChatCount += 1;
     },
+    //עידקוןןן מערכיםם לתצוגהה אחרי כל יום
     updateDailyChatCount(state: HistoryState, action: PayloadAction<{ dayOfWeek: number; chatCount: number }>) {
       const { dayOfWeek, chatCount } = action.payload;
       state.weeklyChatCounts[dayOfWeek] = chatCount;
