@@ -11,6 +11,7 @@ const navItems = [
   { to: "/example", label: "Example (Redux)" },
   { to: "/tabl_data", label: "tabl_data" },
   { to: "/data-history", label: "data-history" },
+  { to: "/filter-admin", label: "Filter Admin" },
 ];
 
 export default function Sidebar() {
