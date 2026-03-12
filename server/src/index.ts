@@ -22,7 +22,12 @@ app.get("/", (req, res) => {
 
 //---------------continue613------------------
 app.post("/api/embed", async (req, res) => {
-  logger.info("Received request for embed with text: " + req.body.text + " || date and time: " + new Date().toISOString());
+  logger.info(
+    "Received request for embed with text: " +
+      req.body.text +
+      " || date and time: " +
+      new Date().toISOString(),
+  );
   try {
     const { text } = req.body;
     console.log("embed", text);
@@ -43,6 +48,17 @@ app.post("/api/embed", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "embedding failed" });
   }
+});
+app.get("/api/retry/:id", async (req, res) => {
+  logger.info(
+    "Received request for retry: " +
+      req.params.id +
+      " || date and time: " +
+      new Date().toISOString(),
+  );
+  res.json({
+    isAllowed: true,
+  });
 });
 
 app.listen(PORT, () => {
