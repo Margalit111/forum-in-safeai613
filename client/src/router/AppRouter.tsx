@@ -3,6 +3,9 @@ import AppLayout from "../layout/AppLayout";
 import HomePage from "../pages/HomePage";
 import ExamplePage from "../features/example/ExamplePage";
 import NotFound from "../pages/NotFound";
+import GroupPromptsPage from '../features/FilterManagement/GroupPromptsPage';
+import AddPromptPage from '../features/FilterManagement/AddPromptPage';
+import EditPromptPage from '../features/FilterManagement/EditPromptPage';
 import InquiriesList from "../features/Inquiries/InquiriesList";
 import AddInquiries from "../features/Inquiries/AddInquiries";
 import InquiriesDetails from "../features/Inquiries/InquiriesDetails";
@@ -22,6 +25,18 @@ export default function AppRouter() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/example" element={<ExamplePage />} />
+
+        
+          <Route path="prompts">
+            
+              <Route index element={<GroupPromptsPage />} />
+              
+           
+              <Route path="add-prompt" element={<AddPromptPage />} />
+              <Route path="edit-prompt/:id" element={<EditPromptPage />} />
+          </Route>
+      
+
           <Route path="/inquiry-list" element={<InquiriesList />} />
           <Route path="/inquiry-add" element={<AddInquiries />} />
           <Route path="/inquiry-details" element={<InquiriesDetails />} />

@@ -4,7 +4,7 @@ const navItems = [
   { to: "/", label: "Dashboard" },
   { to: "/tasks", label: "Tasks Manager" }, // <-- השורה החדשה שהוספנו!
   { to: "/users", label: "Users" },
-  { to: "/groups", label: "Groups" },
+  { to: "/prompts", label: "Prompts" },
   { to: "/models", label: "Models" },
   { to: "/agents", label: "Agents" },
   { to: "/api-keys", label: "API Keys" },
