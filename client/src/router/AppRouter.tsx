@@ -27,8 +27,8 @@ export default function AppRouter() {
           <Route path="/example" element={<ExamplePage />} />
 
         
-          <Route path="groups">
-              כשנכנסים רק ל-groups רואים את הטבלה
+          <Route path="prompts">
+            
               <Route index element={<GroupPromptsPage />} />
               
            
