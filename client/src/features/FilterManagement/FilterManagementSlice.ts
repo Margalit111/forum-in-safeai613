@@ -22,9 +22,9 @@ const initialState: FilterManagementState = {
         { id: 3, groupId: "323", content: "יש לך עוד משהו אתה צריך עזרה?", Status: "not active" }
     ],
     addPrompts: [
-        { id: 4, groupId: "432", content: "תיתן רק דוגמא אחת", Status: "active" },
+        { id: 4, groupId: "432", content: "האם אתה  צריך עוד עזרה?", Status: "active" },
         { id: 5, groupId: "532", content: "איני יכול לענות לך", Status: "active" },
-        { id: 6, groupId: "632", content: "ששששש שב בשקט ותתמקד", Status: "active" }
+        { id: 6, groupId: "632", content: "מצטער זה לא קשור לנושא", Status: "active" }
     ],
 };
 

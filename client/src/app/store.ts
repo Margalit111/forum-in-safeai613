@@ -12,8 +12,8 @@ export const store = configureStore({
     example: exampleReducer,
     inquiries: inquiriesReducer,
     tasks: tasksReducer,
-    historys: historyReducer, // לפי השם שנתת בסלייס
-    table: tableReducer,      // 👈 זה מה שחסר לך
+    historys: historyReducer,
+    table: tableReducer,  
   },
 });
 

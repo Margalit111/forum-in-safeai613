@@ -41,7 +41,6 @@ const AddPromptPage = () => {
       return;
     }
 
-    // type === "list"
     const idNum = Number(selectedPromptId);
     const promptToAdd = addPromptsList.find((p) => p.id === idNum);
 

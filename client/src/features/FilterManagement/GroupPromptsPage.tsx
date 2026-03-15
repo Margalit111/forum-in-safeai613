@@ -1,8 +1,8 @@
-// features/FilterManagement/GroupPromptsPage.tsx
+
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../app/hooks'; // שים לב לנתיב!
+import { useAppDispatch, useAppSelector } from '../../app/hooks'; 
 import { changePromptStatus, removePrompt } from './FilterManagementSlice';
 
 const GroupPromptsPage: React.FC = () => {
