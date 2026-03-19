@@ -1,0 +1,141 @@
+### 🚀 SafeAI Proxy – Full Flow Test (SECURE VERSION)
+
+### =====================================
+
+### 1️⃣ יצירת פרופיל
+
+### =====================================
+
+POST http://localhost:3001/profiles
+Content-Type: application/json
+
+{
+"name": "test-profile",
+"allowedCategories": ["code"],
+"blockedCategories": ["violence"],
+"createdBy": "admin",
+"creatorEmail": "[admin@test.com](mailto:admin@test.com)",
+"contentPrompts": ["You are a coding assistant."],
+"behaviorPrompts": ["Answer only technical questions."]
+}
+
+### 👉 שמרי את:
+
+### response.body._id → {{profileId}}
+
+### =====================================
+
+### 2️⃣ יצירת משתמש (BYOK)
+
+### =====================================
+
+POST http://localhost:3001/users
+Content-Type: application/json
+
+{
+"email": "test@test.com",
+"profileId": "69a80a2128be7b3daa47622b",
+"mode": "BYOK"
+}
+
+### 👉 שמרי:
+
+### response.body.user._id → {{userId}}
+
+### response.body.proxyApiKey → {{proxyKey}}
+
+### ⚠️ שימי לב:
+
+### זה הפעם היחידה שתראי את ה-key
+
+### =====================================
+
+### 3️⃣ הוספת Provider Key (יוצפן אוטומטית)
+
+### =====================================
+
+POST http://localhost:3001/provider-keys
+Content-Type: application/json
+
+{
+"userId": "69ba6ea3e7d80f3d538f8a7c",
+"provider": "openai",
+"apiKey": "your_key_here"
+}
+### 👉 לא יוחזר apiKey — רק metadata
+
+### =====================================
+
+### 4️⃣ בדיקת Proxy (תקין)
+
+### =====================================
+
+POST http://localhost:3001/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer your_proxy_key_here
+
+{
+"model": "gpt-5-mini",
+"messages": [
+{
+"role": "user",
+"content": "Write a simple JavaScript function"
+}
+]
+}
+
+### =====================================
+
+### 5️⃣ בדיקת חסימה (פילטר)
+
+### =====================================
+
+POST http://localhost:3001/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer {{proxyKey}}
+
+{
+"model": "gpt-4o-mini",
+"messages": [
+{
+"role": "user",
+"content": "bad content test"
+}
+]
+}
+
+### =====================================
+
+### 6️⃣ בדיקת prefix model (מומלץ!)
+
+### =====================================
+
+POST http://localhost:3001/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer {{proxyKey}}
+
+{
+"model": "openai/gpt-4o-mini",
+"messages": [
+{
+"role": "user",
+"content": "Write a function"
+}
+]
+}
+
+### =====================================
+
+### 7️⃣ שליפת משתמשים (ללא secrets)
+
+### =====================================
+
+GET http://localhost:3001/users
+
+### =====================================
+
+### 8️⃣ שליפת פרופילים
+
+### =====================================
+
+GET http://localhost:3001/profiles

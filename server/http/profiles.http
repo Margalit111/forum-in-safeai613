@@ -1,0 +1,25 @@
+@baseUrl = http://localhost:3001
+
+### Health
+GET {{baseUrl}}/health
+
+### Create profile
+POST {{baseUrl}}/profiles
+Content-Type: application/json
+
+{
+  "name": "programming",
+  "allowedCategories": ["code", "software"],
+  "blockedCategories": ["violence"],
+  "createdBy": "admin",
+  "creatorEmail": "admin@test.com"
+}
+
+### Get all profiles
+GET {{baseUrl}}/profiles
+
+### Get profile by id
+GET {{baseUrl}}/profiles/REPLACE_WITH_ID
+
+### Delete profile
+DELETE {{baseUrl}}/profiles/REPLACE_WITH_ID

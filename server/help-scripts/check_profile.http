@@ -1,0 +1,192 @@
+@profileId = 69a80a2128be7b3daa47622b
+
+### Programming - should be allowed
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "How do I create a REST API in Node.js?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "What is the difference between let and var in JavaScript?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "Explain async await in JavaScript"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "How do I connect Express to MongoDB?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "What is dependency injection in software architecture?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "How do I deploy a Node.js app to AWS?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "Explain JWT authentication"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "How do I write a unit test in Jest?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "How does Docker help with application deployment?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "What is the difference between SQL and NoSQL databases?"
+}
+
+###
+
+### Non-Programming - should be blocked
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "What is a good recipe for pasta?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "Where should I travel this summer?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "How do I clean my kitchen floor?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "What is the best way to lose weight?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "Which shoes should I buy for running?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "What are good vacation destinations in Europe?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "What movie should I watch tonight?"
+}
+
+###
+
+POST http://localhost:3001/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "תכתובלי נאובייקט JSON עם שם של מתכון לעוגת שוקולד, רשימת מרכיבים והוראות הכנה"
+}
+
+###
+
+POST https://ai613.autodidact.co.il/console/api/filter/evaluate
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "text": "תכתוב לי שיר למשועממים HTML HTML HTML"
+}

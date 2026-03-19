@@ -1,0 +1,60 @@
+general_settings:
+  master_key: sk-safe-ai-master-123
+  database_url: "postgresql://llm_user:llm_pass@db:5432/litellm_db"
+  allow_user_auth_pass_through: true  # <--- זו ההגדרה הקריטית!
+
+model_list:
+  # --- OpenAI (GPT-5 Series) ---
+  # - model_name: gpt-5-pro # הכי חזק: יכולות הסקה (Reasoning) עמוקות
+  #   litellm_params:
+  #     model: openai/gpt-5.2-pro
+  #     api_key: "os.environ/OPENAI_API_KEY"
+  - model_name: gpt-5-mini # הכי זול: מהיר מאוד וחסכוני במיוחד
+    litellm_params:
+      model: openai/gpt-5-mini
+
+  # --- Anthropic (Claude 4 Series) ---
+  # - model_name: claude-4-opus # הכי חזק: המודל המוביל לכתיבת קוד מורכב וארכיטקטורה
+  #   litellm_params:
+  #     model: anthropic/claude-4.6-opus
+  #     api_key: "os.environ/ANTHROPIC_API_KEY"
+  # - model_name: claude-4-sonnet # המאוזן: מהיר יותר מ-Opus ועדיין חזק מאוד
+  #   litellm_params:
+  #     model: anthropic/claude-4.6-sonnet
+  #     api_key: "os.environ/ANTHROPIC_API_KEY"
+  # - model_name: claude-4-haiku # הכי זול: מיועד למשימות פשוטות ותגובה מיידית
+  #   litellm_params:
+  #     model: anthropic/claude-4.5-haiku
+  #     api_key: "os.environ/ANTHROPIC_API_KEY"
+
+  # --- Google (Gemini 3 Series) ---
+  # - model_name: gemini-3-pro # הכי חזק: Context ענק (מעל מיליון טוקנים) לסריקת פרויקטים שלמים
+  #   litellm_params:
+  #     model: gemini/gemini-3.1-pro
+  #     api_key: "os.environ/GOOGLE_API_KEY"
+  - model_name: gemini-3-flash # הכי זול: המודל המהיר ביותר של גוגל למשימות בנפח גבוה
+    litellm_params:
+      model: gemini/gemini-3-flash
+      api_key: "os.environ/GOOGLE_API_KEY"
+
+  # --- Groq (Llama 4 & Grok) ---
+  # - model_name: llama-4-70b # הכי חזק ב-Groq: ביצועים של מודל דגל במהירות הבזק
+  #   litellm_params:
+  #     model: groq/llama-4-70b-maverick
+  #     api_key: "os.environ/GROQ_API_KEY"
+  # - model_name: grok-4-fast # המאוזן: מודל חזק עם יכולות חיפוש מובנות
+  #   litellm_params:
+  #     model: groq/grok-4-fast
+  #     api_key: "os.environ/GROQ_API_KEY"
+  - model_name: llama-4-8b # הכי זול: מהירות אינפרנס קיצונית למשימות קצרות
+    litellm_params:
+      model: groq/llama-4-8b-scout
+      api_key: "os.environ/GROQ_API_KEY"
+
+litellm_settings:
+  drop_params: true
+  # חשוב! מאפשר העברת API keys דינמית
+  allow_user_auth: true
+  # אופציונלי - logging
+  success_callback: ["langfuse"]
+  set_verbose: False # מומלץ לכבות ב-Production כדי לחסוך בלוגים
