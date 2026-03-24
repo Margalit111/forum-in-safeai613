@@ -1,7 +1,7 @@
 # version: "3.8"
 
 services:
-  # 1. בסיס הנתונים
+  # 1. בסיס הנתונים PostgreSQL
   db:
     image: postgres:16-alpine
     container_name: litellm-db
@@ -13,7 +13,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # 2. LiteLLM Proxy
+  # 2. MongoDB
+  # mongodb:
+  #   image: mongo:7-jammy
+  #   container_name: safe-ai-mongodb
+  #   restart: unless-stopped
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongodb_data:/data/db
+
+  # 3. LiteLLM Proxy
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
     container_name: litellm-proxy
@@ -31,7 +41,7 @@ services:
       - HTTPX_SSL_VERIFY=false
     command: ["--config", "/app/config.yaml", "--port", "4000"]
 
-  # 3. השרת שלך
+  # 4. השרת שלך
   server:
     build:
       context: .
@@ -40,15 +50,17 @@ services:
     restart: unless-stopped
     depends_on:
       - litellm
+      # - mongodb
     ports:
       - "3001:3001"
     volumes:
       - .:/app
-      - node_modules:/app/node_modules   # ✅ פתרון לבעיה שלך
+      - node_modules:/app/node_modules
     environment:
       - NODE_ENV=development
       - LITELLM_PROXY_URL=http://litellm:4000
-
+      - MONGO_URI=${MONGO_URI}
 volumes:
   postgres_data:
-  node_modules:   # ✅ volume ייעודי
+  # mongodb_data:
+  node_modules:

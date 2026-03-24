@@ -9,7 +9,6 @@ const navItems = [
   { to: "/agents", label: "Agents" },
   { to: "/api-keys", label: "API Keys" },
   { to: "/stats", label: "Usage" },
-  { to: "/example", label: "Example (Redux)" },
   { to: "/tabl_data", label: "tabl_data" },
   { to: "/data-history", label: "data-history" },
   { to: "/safeai-ui", label: "SafeAI UI" },

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { API_ENDPOINTS, apiCall } from "../../config/api";
+import ArrayInput from "./ArrayInput";
+import ProfileTester from "./ProfileTester";
 
 interface Profile {
   _id: string;
@@ -20,8 +22,12 @@ interface Profile {
 export default function ProfilesManagement() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [saving, setSaving] = useState(false);
+  
   const [formData, setFormData] = useState<Partial<Profile>>({
     name: "",
     allowedCategories: [],
@@ -46,6 +52,7 @@ export default function ProfilesManagement() {
       setProfiles(data);
     } catch (error) {
       console.error("Failed to fetch profiles:", error);
+      alert("שגיאה בטעינת פרופילים");
     } finally {
       setLoading(false);
     }
@@ -53,6 +60,8 @@ export default function ProfilesManagement() {
 
   const handleCreateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
+
     try {
       await apiCall(API_ENDPOINTS.profiles, {
         method: "POST",
@@ -60,16 +69,46 @@ export default function ProfilesManagement() {
       });
 
       await fetchProfiles();
-      setShowModal(false);
+      setShowCreateModal(false);
       resetForm();
-    } catch (error) {
+      alert("הפרופיל נוצר בהצלחה");
+    } catch (error: unknown) {
       console.error("Error creating profile:", error);
-      alert("שגיאה ביצירת פרופיל");
+      const errorMessage = error instanceof Error ? error.message : "שגיאה לא ידועה";
+      alert(`שגיאה ביצירת פרופיל: ${errorMessage}`);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDeleteProfile = async (id: string) => {
-    if (!confirm("האם אתה בטוח שברצונך למחוק פרופיל זה?")) return;
+  const handleEditProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProfile) return;
+
+    setSaving(true);
+
+    try {
+      await apiCall(`${API_ENDPOINTS.profiles}/${editingProfile._id}`, {
+        method: "PUT",
+        body: JSON.stringify(formData),
+      });
+
+      await fetchProfiles();
+      setShowEditModal(false);
+      setEditingProfile(null);
+      resetForm();
+      alert("הפרופיל עודכן בהצלחה");
+    } catch (error: unknown) {
+      console.error("Error updating profile:", error);
+      const errorMessage = error instanceof Error ? error.message : "שגיאה לא ידועה";
+      alert(`שגיאה בעדכון פרופיל: ${errorMessage}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteProfile = async (id: string, name: string) => {
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את הפרופיל "${name}"?`)) return;
 
     try {
       await apiCall(`${API_ENDPOINTS.profiles}/${id}`, {
@@ -77,10 +116,30 @@ export default function ProfilesManagement() {
       });
 
       await fetchProfiles();
-    } catch (error) {
+      alert("הפרופיל נמחק בהצלחה");
+    } catch (error: unknown) {
       console.error("Error deleting profile:", error);
-      alert("שגיאה במחיקת פרופיל");
+      const errorMessage = error instanceof Error ? error.message : "שגיאה לא ידועה";
+      alert(`שגיאה במחיקת פרופיל: ${errorMessage}`);
     }
+  };
+
+  const openEditModal = (profile: Profile) => {
+    setEditingProfile(profile);
+    setFormData({
+      name: profile.name,
+      allowedCategories: profile.allowedCategories || [],
+      blockedCategories: profile.blockedCategories || [],
+      thresholdAllowed: profile.thresholdAllowed,
+      thresholdBlocked: profile.thresholdBlocked,
+      similarityMargin: profile.similarityMargin,
+      createdBy: profile.createdBy,
+      creatorEmail: profile.creatorEmail,
+      contentPrompts: profile.contentPrompts || [],
+      behaviorPrompts: profile.behaviorPrompts || [],
+      knowledgePrompts: profile.knowledgePrompts || [],
+    });
+    setShowEditModal(true);
   };
 
   const resetForm = () => {
@@ -99,6 +158,7 @@ export default function ProfilesManagement() {
     });
   };
 
+
   const filteredProfiles = profiles.filter((profile) =>
     profile.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -107,14 +167,18 @@ export default function ProfilesManagement() {
     return <div className="loading-state">טוען פרופילים...</div>;
   }
 
+
   return (
     <div>
       <div className="management-header">
         <h2>ניהול פרופילים</h2>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
           + פרופיל חדש
         </button>
       </div>
+
+      {/* Profile Tester */}
+      {profiles.length > 0 && <ProfileTester profiles={profiles} />}
 
       <div className="search-bar">
         <input
@@ -128,9 +192,11 @@ export default function ProfilesManagement() {
       {filteredProfiles.length === 0 ? (
         <div className="empty-state">
           <p>לא נמצאו פרופילים</p>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            צור פרופיל ראשון
-          </button>
+          {profiles.length === 0 && (
+            <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+              צור פרופיל ראשון
+            </button>
+          )}
         </div>
       ) : (
         <div className="items-grid">
@@ -138,14 +204,6 @@ export default function ProfilesManagement() {
             <div key={profile._id} className="item-card">
               <div className="item-card-header">
                 <h3 className="item-card-title">{profile.name}</h3>
-                <div className="item-card-actions">
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleDeleteProfile(profile._id)}
-                  >
-                    מחק
-                  </button>
-                </div>
               </div>
               <div className="item-card-body">
                 <div className="item-detail">
@@ -164,6 +222,10 @@ export default function ProfilesManagement() {
                   <span className="item-detail-label">סף חסום:</span>
                   <span className="item-detail-value">{profile.thresholdBlocked}</span>
                 </div>
+                <div className="item-detail">
+                  <span className="item-detail-label">מרווח דמיון:</span>
+                  <span className="item-detail-value">{profile.similarityMargin}</span>
+                </div>
                 {profile.allowedCategories && profile.allowedCategories.length > 0 && (
                   <div className="item-detail">
                     <span className="item-detail-label">קטגוריות מותרות:</span>
@@ -180,25 +242,66 @@ export default function ProfilesManagement() {
                     </span>
                   </div>
                 )}
+                {profile.contentPrompts && profile.contentPrompts.length > 0 && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">Content Prompts:</span>
+                    <span className="item-detail-value">
+                      {profile.contentPrompts.length}
+                    </span>
+                  </div>
+                )}
+                {profile.behaviorPrompts && profile.behaviorPrompts.length > 0 && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">Behavior Prompts:</span>
+                    <span className="item-detail-value">
+                      {profile.behaviorPrompts.length}
+                    </span>
+                  </div>
+                )}
+                {profile.knowledgePrompts && profile.knowledgePrompts.length > 0 && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">Knowledge Prompts:</span>
+                    <span className="item-detail-value">
+                      {profile.knowledgePrompts.length}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="item-card-footer" style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => openEditModal(profile)}
+                  style={{ flex: 1 }}
+                >
+                  ערוך
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleDeleteProfile(profile._id, profile.name)}
+                  style={{ flex: 1 }}
+                >
+                  מחק
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+      {/* Create Profile Modal */}
+      {showCreateModal && (
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "90vh", overflowY: "auto" }}>
             <div className="modal-header">
               <h2>פרופיל חדש</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}>
                 ×
               </button>
             </div>
 
             <form onSubmit={handleCreateProfile}>
               <div className="form-group">
-                <label>שם הפרופיל</label>
+                <label>שם הפרופיל *</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -209,7 +312,7 @@ export default function ProfilesManagement() {
               </div>
 
               <div className="form-group">
-                <label>נוצר על ידי</label>
+                <label>נוצר על ידי *</label>
                 <input
                   type="text"
                   value={formData.createdBy}
@@ -219,7 +322,7 @@ export default function ProfilesManagement() {
               </div>
 
               <div className="form-group">
-                <label>אימייל יוצר</label>
+                <label>אימייל יוצר *</label>
                 <input
                   type="email"
                   value={formData.creatorEmail}
@@ -231,7 +334,7 @@ export default function ProfilesManagement() {
               </div>
 
               <div className="form-group">
-                <label>סף מותר (Threshold Allowed)</label>
+                <label>סף מותר (Threshold Allowed) *</label>
                 <input
                   type="number"
                   step="0.01"
@@ -244,7 +347,7 @@ export default function ProfilesManagement() {
               </div>
 
               <div className="form-group">
-                <label>סף חסום (Threshold Blocked)</label>
+                <label>סף חסום (Threshold Blocked) *</label>
                 <input
                   type="number"
                   step="0.01"
@@ -257,7 +360,7 @@ export default function ProfilesManagement() {
               </div>
 
               <div className="form-group">
-                <label>מרווח דמיון (Similarity Margin)</label>
+                <label>מרווח דמיון (Similarity Margin) *</label>
                 <input
                   type="number"
                   step="0.01"
@@ -269,16 +372,253 @@ export default function ProfilesManagement() {
                 />
               </div>
 
+              <hr style={{ margin: "20px 0" }} />
+
+              <ArrayInput
+                label="קטגוריות מותרות"
+                items={formData.allowedCategories || []}
+                placeholder="הוסף קטגוריה מותרת"
+                onAdd={(value) => setFormData({ ...formData, allowedCategories: [...(formData.allowedCategories || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, allowedCategories: (formData.allowedCategories || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.allowedCategories || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, allowedCategories: newArray });
+                }}
+              />
+
+              <ArrayInput
+                label="קטגוריות חסומות"
+                items={formData.blockedCategories || []}
+                placeholder="הוסף קטגוריה חסומה"
+                onAdd={(value) => setFormData({ ...formData, blockedCategories: [...(formData.blockedCategories || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, blockedCategories: (formData.blockedCategories || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.blockedCategories || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, blockedCategories: newArray });
+                }}
+              />
+
+              <ArrayInput
+                label="Content Prompts"
+                items={formData.contentPrompts || []}
+                placeholder="הוסף Content Prompt"
+                onAdd={(value) => setFormData({ ...formData, contentPrompts: [...(formData.contentPrompts || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, contentPrompts: (formData.contentPrompts || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.contentPrompts || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, contentPrompts: newArray });
+                }}
+              />
+
+              <ArrayInput
+                label="Behavior Prompts"
+                items={formData.behaviorPrompts || []}
+                placeholder="הוסף Behavior Prompt"
+                onAdd={(value) => setFormData({ ...formData, behaviorPrompts: [...(formData.behaviorPrompts || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, behaviorPrompts: (formData.behaviorPrompts || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.behaviorPrompts || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, behaviorPrompts: newArray });
+                }}
+              />
+
+              <ArrayInput
+                label="Knowledge Prompts"
+                items={formData.knowledgePrompts || []}
+                placeholder="הוסף Knowledge Prompt"
+                onAdd={(value) => setFormData({ ...formData, knowledgePrompts: [...(formData.knowledgePrompts || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, knowledgePrompts: (formData.knowledgePrompts || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.knowledgePrompts || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, knowledgePrompts: newArray });
+                }}
+              />
+
               <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={saving}
                 >
                   ביטול
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  צור פרופיל
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? "יוצר..." : "צור פרופיל"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditModal && editingProfile && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "90vh", overflowY: "auto" }}>
+            <div className="modal-header">
+              <h2>עריכת פרופיל: {editingProfile.name}</h2>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleEditProfile}>
+              <div className="form-group">
+                <label>שם הפרופיל *</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  placeholder="למשל: פרופיל בסיסי"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>נוצר על ידי *</label>
+                <input
+                  type="text"
+                  value={formData.createdBy}
+                  onChange={(e) => setFormData({ ...formData, createdBy: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>אימייל יוצר *</label>
+                <input
+                  type="email"
+                  value={formData.creatorEmail}
+                  onChange={(e) =>
+                    setFormData({ ...formData, creatorEmail: e.target.value })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>סף מותר (Threshold Allowed) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.thresholdAllowed}
+                  onChange={(e) =>
+                    setFormData({ ...formData, thresholdAllowed: parseFloat(e.target.value) })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>סף חסום (Threshold Blocked) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.thresholdBlocked}
+                  onChange={(e) =>
+                    setFormData({ ...formData, thresholdBlocked: parseFloat(e.target.value) })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>מרווח דמיון (Similarity Margin) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.similarityMargin}
+                  onChange={(e) =>
+                    setFormData({ ...formData, similarityMargin: parseFloat(e.target.value) })
+                  }
+                  required
+                />
+              </div>
+
+              <hr style={{ margin: "20px 0" }} />
+
+              <ArrayInput
+                label="קטגוריות מותרות"
+                items={formData.allowedCategories || []}
+                placeholder="הוסף קטגוריה מותרת"
+                onAdd={(value) => setFormData({ ...formData, allowedCategories: [...(formData.allowedCategories || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, allowedCategories: (formData.allowedCategories || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.allowedCategories || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, allowedCategories: newArray });
+                }}
+              />
+
+              <ArrayInput
+                label="קטגוריות חסומות"
+                items={formData.blockedCategories || []}
+                placeholder="הוסף קטגוריה חסומה"
+                onAdd={(value) => setFormData({ ...formData, blockedCategories: [...(formData.blockedCategories || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, blockedCategories: (formData.blockedCategories || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.blockedCategories || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, blockedCategories: newArray });
+                }}
+              />
+
+              <ArrayInput
+                label="Content Prompts"
+                items={formData.contentPrompts || []}
+                placeholder="הוסף Content Prompt"
+                onAdd={(value) => setFormData({ ...formData, contentPrompts: [...(formData.contentPrompts || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, contentPrompts: (formData.contentPrompts || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.contentPrompts || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, contentPrompts: newArray });
+                }}
+              />
+
+              <ArrayInput
+                label="Behavior Prompts"
+                items={formData.behaviorPrompts || []}
+                placeholder="הוסף Behavior Prompt"
+                onAdd={(value) => setFormData({ ...formData, behaviorPrompts: [...(formData.behaviorPrompts || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, behaviorPrompts: (formData.behaviorPrompts || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.behaviorPrompts || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, behaviorPrompts: newArray });
+                }}
+              />
+
+              <ArrayInput
+                label="Knowledge Prompts"
+                items={formData.knowledgePrompts || []}
+                placeholder="הוסף Knowledge Prompt"
+                onAdd={(value) => setFormData({ ...formData, knowledgePrompts: [...(formData.knowledgePrompts || []), value] })}
+                onRemove={(index) => setFormData({ ...formData, knowledgePrompts: (formData.knowledgePrompts || []).filter((_, i) => i !== index) })}
+                onUpdate={(index, value) => {
+                  const newArray = [...(formData.knowledgePrompts || [])];
+                  newArray[index] = value;
+                  setFormData({ ...formData, knowledgePrompts: newArray });
+                }}
+              />
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={saving}
+                >
+                  ביטול
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? "שומר..." : "שמור שינויים"}
                 </button>
               </div>
             </form>
