@@ -4,6 +4,12 @@ const UserSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true },
     name: String,
+    organization: String,
+    role: {
+      type: String,
+      enum: ["admin", "user"],
+      default: "user",
+    },
 
     // --- שדות עבור המפתח שהמשתמש מקבל ממך (App Level) ---
     proxyKeyHash: {

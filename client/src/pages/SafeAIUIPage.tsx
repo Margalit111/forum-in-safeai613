@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/safeai-ui.css";
 import ProfilesManagement from "../features/safeai-ui/ProfilesManagement";
 import UsersManagement from "../features/safeai-ui/UsersManagement";
-import AuthSection from "../features/safeai-ui/AuthSection";
 import UserDashboard from "../features/safeai-ui/UserDashboard";
 import Statistics from "../features/safeai-ui/Statistics";
+import UserApiKeysPage from "../features/safeai-ui/UserApiKeysPage";
 
-type Section = "profiles" | "users" | "auth" | "dashboard" | "statistics";
+type Section = "profiles" | "users" | "dashboard" | "statistics" | "apikeys";
 
 interface UserData {
   email: string;
@@ -15,24 +16,47 @@ interface UserData {
 }
 
 export default function SafeAIUIPage() {
-  const [activeSection, setActiveSection] = useState<Section>("auth");
-  const [userRole, setUserRole] = useState<"admin" | "user" | null>(null);
-  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
-
-  const handleLogin = (role: "admin" | "user", userData?: UserData) => {
-    setUserRole(role);
-    setCurrentUser(userData || null);
-    if (role === "admin") {
-      setActiveSection("profiles");
-    } else {
-      setActiveSection("dashboard");
+  const navigate = useNavigate();
+  
+  // Initialize state from localStorage
+  const getInitialState = () => {
+    const storedUser = localStorage.getItem("user");
+    const storedRole = localStorage.getItem("userRole");
+    
+    if (storedUser && storedRole) {
+      const parsedUser = JSON.parse(storedUser);
+      return {
+        user: parsedUser,
+        role: storedRole as "admin" | "user",
+        section: (storedRole === "admin" ? "profiles" : "dashboard") as Section
+      };
     }
+    
+    return {
+      user: null,
+      role: null,
+      section: "dashboard" as Section
+    };
   };
+
+  const initialState = getInitialState();
+  const [activeSection, setActiveSection] = useState<Section>(initialState.section);
+  const [userRole, setUserRole] = useState<"admin" | "user" | null>(initialState.role);
+  const [currentUser, setCurrentUser] = useState<UserData | null>(initialState.user);
+
+  // Redirect to landing page if not authenticated
+  useEffect(() => {
+    if (!userRole) {
+      navigate("/");
+    }
+  }, [userRole, navigate]);
 
   const handleLogout = () => {
     setUserRole(null);
     setCurrentUser(null);
-    setActiveSection("auth");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userRole");
+    navigate("/");
   };
 
   const renderSection = () => {
@@ -41,14 +65,14 @@ export default function SafeAIUIPage() {
         return <ProfilesManagement />;
       case "users":
         return <UsersManagement />;
-      case "auth":
-        return <AuthSection onLogin={handleLogin} />;
       case "dashboard":
         return <UserDashboard user={currentUser} />;
       case "statistics":
         return <Statistics user={currentUser} />;
+      case "apikeys":
+        return <UserApiKeysPage />;
       default:
-        return <AuthSection onLogin={handleLogin} />;
+        return <UserDashboard user={currentUser} />;
     }
   };
 
@@ -91,6 +115,12 @@ export default function SafeAIUIPage() {
                 onClick={() => setActiveSection("dashboard")}
               >
                 לוח משתמש
+              </button>
+              <button
+                className={activeSection === "apikeys" ? "nav-btn active" : "nav-btn"}
+                onClick={() => setActiveSection("apikeys")}
+              >
+                🔑 מפתחות API
               </button>
               <button
                 className={activeSection === "statistics" ? "nav-btn active" : "nav-btn"}

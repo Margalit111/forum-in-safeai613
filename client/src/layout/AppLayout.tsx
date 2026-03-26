@@ -5,7 +5,7 @@ import "../styles/layout.css";
 
 export default function AppLayout() {
   const location = useLocation();
-  const showDevelopmentModal = location.pathname !== "/safeai-ui";
+  const showDevelopmentModal = location.pathname !== "/safeai-ui" && location.pathname !== "/";
 
   return (
     <div className="app-root">

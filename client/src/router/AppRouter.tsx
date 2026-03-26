@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "../layout/AppLayout";
+import LandingPage from "../pages/LandingPage";
 import HomePage from "../pages/HomePage";
 import NotFound from "../pages/NotFound";
 import TasksList from "../features/tasks/TasksList";
@@ -15,7 +16,8 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/tasks" element={<TasksList />} />
           <Route path="/add-task" element={<AddTask />} />
           <Route path="/edit-task/:id" element={<UpdateTask />} />

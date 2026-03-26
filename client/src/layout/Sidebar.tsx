@@ -1,18 +1,19 @@
 import { NavLink } from "react-router-dom";
 
 const navItems = [
-  { to: "/", label: "Dashboard" },
-  { to: "/tasks", label: "Tasks Manager" }, // <-- השורה החדשה שהוספנו!
-  { to: "/users", label: "Users" },
-  { to: "/groups", label: "Groups" },
-  { to: "/models", label: "Models" },
-  { to: "/agents", label: "Agents" },
-  { to: "/api-keys", label: "API Keys" },
-  { to: "/stats", label: "Usage" },
-  { to: "/tabl_data", label: "tabl_data" },
-  { to: "/data-history", label: "data-history" },
+  { to: "/", label: "דף הבית" },
   { to: "/safeai-ui", label: "SafeAI UI" },
-  { to: "/filter-admin", label: "Filter Admin" },
+  { to: "/home", label: "לוח בקרה" },
+  { to: "/tasks", label: "ניהול משימות" },
+  { to: "/users", label: "משתמשים" },
+  { to: "/groups", label: "קבוצות" },
+  { to: "/models", label: "מודלים" },
+  { to: "/agents", label: "סוכנים" },
+  { to: "/api-keys", label: "מפתחות API" },
+  { to: "/stats", label: "סטטיסטיקות שימוש" },
+  { to: "/tabl_data", label: "טבלת נתונים" },
+  { to: "/data-history", label: "היסטוריית נתונים" },
+  { to: "/filter-admin", label: "ניהול פילטרים" },
 ];
 
 export default function Sidebar() {
