@@ -8,3 +8,4 @@ export * from "./aiProfile";
 export * from "./embedding";
 export * from "./prompt";
 export * from "./evaluationLog";
+export * from "./usageLog";

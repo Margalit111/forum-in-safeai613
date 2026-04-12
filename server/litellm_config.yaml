@@ -35,7 +35,7 @@ model_list:
   - model_name: gemini-3-flash # הכי זול: המודל המהיר ביותר של גוגל למשימות בנפח גבוה
     litellm_params:
       model: gemini/gemini-3-flash
-      api_key: "os.environ/GOOGLE_API_KEY"
+      # api_key: "os.environ/GOOGLE_API_KEY"
 
   # --- Groq (Llama 4 & Grok) ---
   # - model_name: llama-4-70b # הכי חזק ב-Groq: ביצועים של מודל דגל במהירות הבזק
@@ -49,7 +49,7 @@ model_list:
   - model_name: llama-4-8b # הכי זול: מהירות אינפרנס קיצונית למשימות קצרות
     litellm_params:
       model: groq/llama-4-8b-scout
-      api_key: "os.environ/GROQ_API_KEY"
+      # api_key: "os.environ/GROQ_API_KEY"
 
 litellm_settings:
   drop_params: true

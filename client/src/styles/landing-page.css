@@ -14,7 +14,7 @@
 }
 
 .landing-header h1 {
-  font-size: 36px;
+  font-size: 60px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 16px 0;
@@ -36,7 +36,7 @@
 }
 
 .landing-nav-btn {
-  padding: 14px 32px;
+  padding: 32px 48px;
   border: 2px solid var(--border-default);
   background: var(--bg-surface);
   color: var(--text-primary);
@@ -56,6 +56,17 @@
   background: var(--brand-primary);
   color: white;
   border-color: var(--brand-primary);
+}
+
+.landing-nav-btn-primary {
+  background: var(--brand-primary);
+  color: white;
+  border-color: var(--brand-primary);
+}
+
+.landing-nav-btn-primary:hover {
+  background: #0284c7;
+  border-color: #0284c7;
 }
 
 .landing-content {
@@ -238,6 +249,14 @@
   padding: 32px;
 }
 
+.auth-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 24px 0;
+  text-align: center;
+}
+
 .auth-tabs {
   display: flex;
   gap: 8px;
@@ -313,6 +332,13 @@
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .btn-full {

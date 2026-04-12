@@ -82,3 +82,13 @@ export async function updateUser(userId: string, data: any) {
 export async function deleteUser(userId: string) {
   return repo.deleteUser(userId);
 }
+
+export const findUserByEmail = async (email: string) => {
+  return repo.findUserByEmail(email);
+};
+
+export const addRefreshToken = async (userId: string, refreshToken: string) => {
+  return repo.updateUser(userId, {
+    $push: { refreshTokens: refreshToken }
+  });
+};

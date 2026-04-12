@@ -122,12 +122,12 @@ export default function SafeAIUIPage() {
               >
                 🔑 מפתחות API
               </button>
-              <button
+              {/* <button
                 className={activeSection === "statistics" ? "nav-btn active" : "nav-btn"}
                 onClick={() => setActiveSection("statistics")}
               >
                 סטטיסטיקות
-              </button>
+              </button> */}
             </>
           )}
         </nav>

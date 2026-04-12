@@ -7,11 +7,13 @@ import profileRouter from "./routes/profileRouter";
 import openaiRouter from "./routes/openaiRouter";
 import userRouter from "./routes/userRouter";
 import providerKeyRouter from "./routes/providerKeyRouter";
+import authRouter from "./routes/authRouter";
+import usageRouter from "./routes/usageRouter";
 
 import { requestLogger } from "./middleware/requestLogger";
 import { errorHandler } from "./middleware/errorHandler";
 import { connectDatabase } from "./config/db";
-import {proxyAuth} from "./middleware/proxyAuth";
+import { authenticateToken, requireAdmin } from "./middleware/auth";
 
 const PORT = process.env.PORT || 3001;
 
@@ -21,25 +23,38 @@ const app = express();
 app.use(cors({
   origin: ["http://localhost:5173", "http://localhost:3000"],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-app.use(express.json());
+// הגדרה ל-50 מגה-בייט כדי להיות בטוחים
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 app.use(requestLogger);
-
-
 
 app.get("/health", (_req, res) => {
   res.send("OK");
 });
 
-app.use("/filter", filterRouter);
-app.use("/profiles", profileRouter);
-app.use("/users", userRouter);
-app.use("/provider-keys", providerKeyRouter);
-app.use("/v1",openaiRouter);
+// ===== Public Routes (No Authentication) =====
+app.use("/api/auth", authRouter);
+
+// ===== JWT Protected Routes (User Self-Management) =====
+// Import the handler for self-profile updates
+import { updateOwnProfileHandler } from "./controllers/userController";
+app.patch("/api/users/:id", authenticateToken, updateOwnProfileHandler);
+
+// ===== JWT Protected Routes (Admin Panel & Management) =====
+app.use("/api/users", authenticateToken, requireAdmin, userRouter);
+app.use("/api/profiles", authenticateToken, profileRouter);
+app.use("/api/provider-keys", authenticateToken, providerKeyRouter);
+app.use("/api/filter", authenticateToken, filterRouter);
+
+app.use("/api/usage", usageRouter); // Already has authenticateToken inside
+
+// ===== Proxy API Key Protected Routes (LiteLLM Proxy) =====
+app.use("/v1", openaiRouter); // Uses proxyAuth middleware in the router
 
 
 

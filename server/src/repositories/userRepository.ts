@@ -15,6 +15,10 @@ export async function getUserByProxyKeyHash(proxyKeyHash: string) {
 export async function getUsers() {
   return User.find({}, { proxyKeyHash: 0 }).lean();
 }
+export async function findUserByEmail(email:string) {
+   return User.findOne({ email });
+
+}
 
 export async function getUserById(userId: string) {
   return User.findById(userId).lean();

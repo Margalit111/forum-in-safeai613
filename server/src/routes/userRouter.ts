@@ -13,6 +13,7 @@ router.post("/", createUserHandler);
 router.get("/", listUsersHandler);
 router.get("/:id", getUserHandler);
 router.put("/:id", updateUserHandler);
+router.patch("/:id", updateUserHandler);
 router.delete("/:id", deleteUserHandler);
 
 export default router;

@@ -1,13 +1,14 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/landing-page.css";
 import AboutCompany from "../features/landing/AboutCompany";
 import Products from "../features/landing/Products";
-import AuthForm from "../features/landing/AuthForm";
 
-type Section = "about" | "products" | "auth";
+type Section = "about" | "products";
 
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState<Section>("about");
+  const navigate = useNavigate();
 
   const renderSection = () => {
     switch (activeSection) {
@@ -15,8 +16,6 @@ export default function LandingPage() {
         return <AboutCompany />;
       case "products":
         return <Products />;
-      case "auth":
-        return <AuthForm />;
       default:
         return <AboutCompany />;
     }
@@ -24,30 +23,25 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
-      <div className="landing-header">
-        <h1>SafeAI - בינה מלאכותית בטוחה ומסוננת</h1>
-        <p className="landing-subtitle">פתרונות מתקדמים לסינון תוכן AI עבור ארגונים ומוסדות</p>
-      </div>
+    
 
       <nav className="landing-nav">
         <button
-          className={activeSection === "about" ? "landing-nav-btn active" : "landing-nav-btn"}
+  className="landing-nav-btn"
           onClick={() => setActiveSection("about")}
         >
-          אודות החברה
+          לאורח{" "}
         </button>
         <button
-          className={activeSection === "products" ? "landing-nav-btn active" : "landing-nav-btn"}
+          className="landing-nav-btn"
           onClick={() => setActiveSection("products")}
         >
-          המוצרים שלנו
+          למפתח{" "}
         </button>
-        <button
-          className={activeSection === "auth" ? "landing-nav-btn active" : "landing-nav-btn"}
-          onClick={() => setActiveSection("auth")}
-        >
-          התחברות / הרשמה
+        <button className="landing-nav-btn active" onClick={() => navigate("/login")}>
+          לכניסה למערכת &gt;&gt;&gt;
         </button>
+      
       </nav>
 
       <div className="landing-content">{renderSection()}</div>

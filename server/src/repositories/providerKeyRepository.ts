@@ -1,3 +1,4 @@
+import logger from "../logger";
 import { ProviderKey } from "../models/providerKey";
 
 export async function createProviderKey(data: any) {
@@ -16,6 +17,8 @@ export async function getProviderKeyByUserAndProvider(
 }
 
 export async function getSystemProviderKey(provider: string) {
+  
+  
   return ProviderKey.findOne({
     provider,
     isSystem: true,

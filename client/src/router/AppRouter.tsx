@@ -1,32 +1,109 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AppLayout from "../layout/AppLayout";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "../pages/LandingPage";
-import HomePage from "../pages/HomePage";
-import NotFound from "../pages/NotFound";
-import TasksList from "../features/tasks/TasksList";
-import AddTask from "../features/tasks/AddTask";
-import UpdateTask from "../features/tasks/UpdateTask";
-import TableView from "../features/tabl_data/TableView";
-import GrafsCompo from "../features/data-history/GrafsCompo";
 import SafeAIUIPage from "../pages/SafeAIUIPage";
-// import SafeFilterAdmin from "../pages/FilterAdminPage";
+import NotFound from "../pages/NotFound";
+import LoginForm from "../features/auth/LoginForm";
+import RegisterForm from "../features/auth/RegisterForm";
+import ApiKeyDisplay from "../features/auth/ApiKeyDisplay";
+import EmailVerification from "../features/auth/EmailVerification";
+import ForgotPassword from "../features/auth/ForgotPassword";
+import ResetPassword from "../features/auth/ResetPassword";
+import RegisterFormSuccess from "../features/auth/RegisterFormSuccess";
+
+// Protected Route Component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const accessToken = localStorage.getItem("accessToken");
+  const user = localStorage.getItem("user");
+
+
+  // !!!!!!! change it!  return if !!!!!!!!!!!!!!!!
+  if (!accessToken || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Public Route Component (redirect to dashboard if already logged in)
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const accessToken = localStorage.getItem("accessToken");
+  const user = localStorage.getItem("user");
+
+  if (accessToken && user) {
+    return <Navigate to="/safeai-ui" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/tasks" element={<TasksList />} />
-          <Route path="/add-task" element={<AddTask />} />
-          <Route path="/edit-task/:id" element={<UpdateTask />} />
-          <Route path="/tabl_data" element={<TableView/>}/>
-          <Route path="/data-history" element={<GrafsCompo/>}/>
-          <Route path="/safeai-ui" element={<SafeAIUIPage />} />
-          {/* <Route path="/filter-admin" element={<SafeFilterAdmin />} /> */}
-          <Route path="*" element={<NotFound />} />
-        </Route>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginForm />
+            </PublicRoute>
+          }
+        />
+        
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <RegisterForm />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register-success"
+          element={
+            // !!! change to private !!!!
+            <ProtectedRoute>
+              <RegisterFormSuccess />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route path="/verify-email/:token" element={<EmailVerification />} />
+        
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+        
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        
+        {/* Protected Routes */}
+        <Route
+          path="/api-key-display"
+          element={
+            <ProtectedRoute>
+              <ApiKeyDisplay />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/safeai-ui"
+          element={
+            <ProtectedRoute>
+              <SafeAIUIPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch all - 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

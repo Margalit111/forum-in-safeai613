@@ -112,7 +112,7 @@ Authorization: Bearer {{proxyKey}}
 
 POST http://localhost:3001/v1/chat/completions
 Content-Type: application/json
-Authorization: Bearer {{proxyKey}}
+Authorization: Bearer sk-safeai-a31d31c50aa36e8678747971eba5d23c38598cdedb735f4b
 
 {
 "model": "openai/gpt-4o-mini",
@@ -138,4 +138,7 @@ GET http://localhost:3001/users
 
 ### =====================================
 
-GET http://localhost:3001/profiles
+GET http://localhost:3001/api/profiles
+
+
+

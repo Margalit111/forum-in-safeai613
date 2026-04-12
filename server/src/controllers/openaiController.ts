@@ -2,19 +2,6 @@ import { Request, Response } from "express";
 import { proxyChatCompletion } from "../services/proxyService";
 
 export async function chatCompletionHandler(req: Request, res: Response) {
-  // try {
-
-  //   const user = (req as any).user;
-
-  //   const result = await proxyChatCompletion(user, req.body);
-
-  //   res.json(result);
-
-  // } catch (err) {
-  //     console.error("PROXY ERROR:", err);
-
-  //   res.status(500).json({ error: "Proxy error" });
-  // }
   try {
     // Type assertion
     const user = (req as any).user;
@@ -23,7 +10,7 @@ export async function chatCompletionHandler(req: Request, res: Response) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-
+    console.log("Is Body Complete?", JSON.stringify(req.body).endsWith("}"));
     try {
       console.log("📥 Request received:", {
         model: req.body.model,

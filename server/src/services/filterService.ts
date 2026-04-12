@@ -8,7 +8,10 @@
 import OpenAI from "openai";
 import logger from "../logger";
 import { Embedding } from "../models";
-import { getEmbeddingVectorsByCategory, addEmbeddingToCache } from "../cache/embeddingCache";
+import {
+  getEmbeddingVectorsByCategory,
+  addEmbeddingToCache,
+} from "../cache/embeddingCache";
 import { getLLMDecision } from "./llmService";
 import { cosineSimilarity } from "../utils/cosineSimilarity";
 import {
@@ -40,7 +43,9 @@ export async function createEmbedding(req: EmbeddingRequest) {
   addEmbeddingToCache(category, vector);
 }
 
-export async function evaluateText(req: EvaluateRequest): Promise<EvaluateResponse> {
+export async function evaluateText(
+  req: EvaluateRequest,
+): Promise<EvaluateResponse> {
   const { profileId, text, auditDisabled } = req;
 
   if (!profileId || !text) {
@@ -54,82 +59,87 @@ export async function evaluateText(req: EvaluateRequest): Promise<EvaluateRespon
     throw new Error("AIProfile not found");
   }
 
-  const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: text,
-  });
+  //----------------Embedding Filter (Futute)----------------
+  // const response = await openai.embeddings.create({
+  //   model: "text-embedding-3-small",
+  //   input: text,
+  // });
 
-  const inputVector = response.data?.[0]?.embedding;
-  if (!inputVector) {
-    throw new Error("Embedding failed");
-  }
+  // const inputVector = response.data?.[0]?.embedding;
+  // if (!inputVector) {
+  //   throw new Error("Embedding failed");
+  // }
 
-  let bestAllowed = 0;
-  let bestBlocked = 0;
+  // let bestAllowed = 0;
+  // let bestBlocked = 0;
 
-  for (const category of profile.allowedCategories ?? []) {
-    const vectors = getEmbeddingVectorsByCategory(category);
-    for (const vector of vectors) {
-      const score = cosineSimilarity(inputVector, vector);
-      if (score > bestAllowed) bestAllowed = score;
-    }
-  }
+  // for (const category of profile.allowedCategories ?? []) {
+  //   const vectors = getEmbeddingVectorsByCategory(category);
+  //   for (const vector of vectors) {
+  //     const score = cosineSimilarity(inputVector, vector);
+  //     if (score > bestAllowed) bestAllowed = score;
+  //   }
+  // }
 
-  for (const category of profile.blockedCategories ?? []) {
-    const vectors = getEmbeddingVectorsByCategory(category);
-    for (const vector of vectors) {
-      const score = cosineSimilarity(inputVector, vector);
-      if (score > bestBlocked) bestBlocked = score;
-    }
-  }
+  // for (const category of profile.blockedCategories ?? []) {
+  //   const vectors = getEmbeddingVectorsByCategory(category);
+  //   for (const vector of vectors) {
+  //     const score = cosineSimilarity(inputVector, vector);
+  //     if (score > bestBlocked) bestBlocked = score;
+  //   }
+  // }
 
-  const diff = bestAllowed - bestBlocked;
+  // const diff = bestAllowed - bestBlocked;
 
-  logger.info(
-    `Profile=${profile.name} | allowed=${bestAllowed.toFixed(4)} blocked=${bestBlocked.toFixed(4)} diff=${diff.toFixed(
-      4,
-    )}`,
-  );
+  // logger.info(
+  //   `Profile=${profile.name} | allowed=${bestAllowed.toFixed(4)} blocked=${bestBlocked.toFixed(4)} diff=${diff.toFixed(
+  //     4,
+  //   )}`,
+  // );
 
   let finalAllowed = false;
   let reason = "low-confidence";
 
-  if (bestBlocked > profile.thresholdBlocked && bestBlocked > bestAllowed) {
-    reason = "blocked-category";
-  } else if (
-    bestAllowed > profile.thresholdAllowed &&
-    diff > profile.similarityMargin
-  ) {
-    finalAllowed = true;
-    reason = "passed-vector";
-  }
+  // if (bestBlocked > profile.thresholdBlocked && bestBlocked > bestAllowed) {
+  //   reason = "blocked-category";
+  // } else if (
+  //   bestAllowed > profile.thresholdAllowed &&
+  //   diff > profile.similarityMargin
+  // ) {
+  //   finalAllowed = true;
+  //   reason = "passed-vector";
+  // }
 
-  if (!finalAllowed) {
-    if (!auditDisabled) {
-      logger.info("Low confidence or blocked by vector. Consulting GPT-4o-mini...");
-    }
-
-    const isSafeByLLM = await getLLMDecision(
-      text,
-      profile.name,
-      (profile.allowedCategories ?? []).join(", ") +
-        " " +
-        (profile.blockedCategories ?? []).join(", "),
+  // if (!finalAllowed) {
+  if (!auditDisabled) {
+    logger.info(
+      "Low confidence or blocked by vector. Consulting GPT-4o-mini...",
     );
-
-    if (isSafeByLLM) {
-      finalAllowed = true;
-      reason = "allowed-by-llm";
-    } else {
-      reason = "blocked-by-llm";
-    }
   }
+
+
+  // const isSafeByLLM = true;
+  const isSafeByLLM = await getLLMDecision(
+    text,
+    profile.name,
+    (profile.allowedCategories ?? []).join(", ") +
+      " " +
+      (profile.blockedCategories ?? []).join(", "),
+  );
+
+  if (isSafeByLLM) {
+    finalAllowed = true;
+    reason = "allowed-by-llm";
+  } else {
+    reason = "blocked-by-llm";
+  }
+  // }
 
   if (!auditDisabled) {
     await EvaluationLog.create({
       profileId: profile._id,
       text,
-      vectorScores: { bestAllowed, bestBlocked },
+      vectorScores: {  },
       initialDecision: reason,
       llmFinalDecision: finalAllowed ? "allowed" : "blocked",
     });

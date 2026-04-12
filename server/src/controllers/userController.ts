@@ -59,3 +59,35 @@ export async function deleteUserHandler(req: Request<{ id: string }>, res: Respo
     res.status(500).json({ error: "Server error" });
   }
 }
+
+export async function updateOwnProfileHandler(req: Request<{ id: string }>, res: Response) {
+  try {
+    const userId = (req as any).user?.userId;
+    
+    // Ensure user can only update their own profile
+    if (userId !== req.params.id) {
+      return res.status(403).json({ error: "You can only update your own profile" });
+    }
+
+    // Only allow updating specific fields (not admin fields)
+    const allowedFields = ['profileId', 'name', 'organization'];
+    const updateData: any = {};
+    
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
+    const user = await updateUser(req.params.id, updateData);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error("Error updating profile:", err);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+}
