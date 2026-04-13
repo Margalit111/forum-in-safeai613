@@ -39,28 +39,28 @@ app.get("/health", (_req, res) => {
 });
 
 // ===== Public Routes (No Authentication) =====
-app.use("/auth", authRouter);
+app.use("/api/auth", authRouter);
 
 // ===== JWT Protected Routes (User Self-Management) =====
 // Import the handler for self-profile updates
 import { updateOwnProfileHandler } from "./controllers/userController";
-app.patch("/users/:id", authenticateToken, updateOwnProfileHandler);
-app.use("/usage", usageRouter); // Already has authenticateToken inside
+app.patch("/api/users/:id", authenticateToken, updateOwnProfileHandler);
+app.use("/api/usage", usageRouter); // Already has authenticateToken inside
 
 
 // ===== JWT Protected Routes (Admin Panel & Management) =====
-app.use("/users", authenticateToken, requireAdmin, userRouter);
-app.use("/profiles", authenticateToken, profileRouter);
-app.use("/provider-keys", authenticateToken, providerKeyRouter);
-app.use("/admin/stats", adminStatsRouter); // Admin stats already has auth middleware
+app.use("/api/users", authenticateToken, requireAdmin, userRouter);
+app.use("/api/profiles", authenticateToken, profileRouter);
+app.use("/api/provider-keys", authenticateToken, providerKeyRouter);
+app.use("/api/admin/stats", adminStatsRouter); // Admin stats already has auth middleware
 
 
 // ===== Public routes for filter evaluation =====
-app.use("/filter", filterRouter);
+app.use("/api/filter", filterRouter);
 
 
 // ===== Proxy API Key Protected Routes (LiteLLM Proxy) =====
-app.use("/v1", openaiRouter); // Uses proxyAuth middleware in the router
+app.use("api/v1", openaiRouter); // Uses proxyAuth middleware in the router
 
 
 
