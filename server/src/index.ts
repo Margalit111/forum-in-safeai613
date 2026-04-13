@@ -9,6 +9,7 @@ import userRouter from "./routes/userRouter";
 import providerKeyRouter from "./routes/providerKeyRouter";
 import authRouter from "./routes/authRouter";
 import usageRouter from "./routes/usageRouter";
+import adminStatsRouter from "./routes/adminStatsRouter";
 
 import { requestLogger } from "./middleware/requestLogger";
 import { errorHandler } from "./middleware/errorHandler";
@@ -52,6 +53,7 @@ app.use("/api/users", authenticateToken, requireAdmin, userRouter);
 app.use("/api/profiles", authenticateToken, profileRouter);
 app.use("/api/provider-keys", authenticateToken, providerKeyRouter);
 app.use("/api/filter", authenticateToken, filterRouter);
+app.use("/api/admin/stats", adminStatsRouter); // Admin stats already has auth middleware
 
 
 // ===== Public routes for filter evaluation =====

@@ -7,7 +7,7 @@ import {
 
 import {
   createProfile,
-  listProfiles,
+  getProfiles,
 } from "../services/profileService";
 
 export async function healthHandler(_req: Request, res: Response) {
@@ -48,7 +48,7 @@ export async function postAIProfileHandler(req: Request, res: Response) {
 }
 
 export async function getAIProfilesHandler(_req: Request, res: Response) {
-  const profiles = await listProfiles();
+  const profiles = await getProfiles();
   res.json(profiles);
 }
 

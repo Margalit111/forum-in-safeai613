@@ -27,6 +27,13 @@ export const API_ENDPOINTS = {
     limits: `${API_BASE_URL}/api/usage/limits`,
     costs: `${API_BASE_URL}/api/usage/costs`,
   },
+  // Admin statistics endpoints
+  adminStats: {
+    stats: `${API_BASE_URL}/api/admin/stats/stats`,
+    daily: `${API_BASE_URL}/api/admin/stats/daily`,
+    users: `${API_BASE_URL}/api/admin/stats/users`,
+    models: `${API_BASE_URL}/api/admin/stats/models`,
+  },
 } as const;
 
 // Helper function for API calls

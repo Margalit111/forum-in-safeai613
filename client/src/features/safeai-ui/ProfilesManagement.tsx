@@ -214,18 +214,6 @@ export default function ProfilesManagement() {
                   <span className="item-detail-label">אימייל:</span>
                   <span className="item-detail-value">{profile.creatorEmail}</span>
                 </div>
-                <div className="item-detail">
-                  <span className="item-detail-label">סף מותר:</span>
-                  <span className="item-detail-value">{profile.thresholdAllowed}</span>
-                </div>
-                <div className="item-detail">
-                  <span className="item-detail-label">סף חסום:</span>
-                  <span className="item-detail-value">{profile.thresholdBlocked}</span>
-                </div>
-                <div className="item-detail">
-                  <span className="item-detail-label">מרווח דמיון:</span>
-                  <span className="item-detail-value">{profile.similarityMargin}</span>
-                </div>
                 {profile.allowedCategories && profile.allowedCategories.length > 0 && (
                   <div className="item-detail">
                     <span className="item-detail-label">קטגוריות מותרות:</span>
@@ -328,45 +316,6 @@ export default function ProfilesManagement() {
                   value={formData.creatorEmail}
                   onChange={(e) =>
                     setFormData({ ...formData, creatorEmail: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>סף מותר (Threshold Allowed) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.thresholdAllowed}
-                  onChange={(e) =>
-                    setFormData({ ...formData, thresholdAllowed: parseFloat(e.target.value) })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>סף חסום (Threshold Blocked) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.thresholdBlocked}
-                  onChange={(e) =>
-                    setFormData({ ...formData, thresholdBlocked: parseFloat(e.target.value) })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>מרווח דמיון (Similarity Margin) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.similarityMargin}
-                  onChange={(e) =>
-                    setFormData({ ...formData, similarityMargin: parseFloat(e.target.value) })
                   }
                   required
                 />
@@ -497,45 +446,6 @@ export default function ProfilesManagement() {
                   value={formData.creatorEmail}
                   onChange={(e) =>
                     setFormData({ ...formData, creatorEmail: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>סף מותר (Threshold Allowed) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.thresholdAllowed}
-                  onChange={(e) =>
-                    setFormData({ ...formData, thresholdAllowed: parseFloat(e.target.value) })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>סף חסום (Threshold Blocked) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.thresholdBlocked}
-                  onChange={(e) =>
-                    setFormData({ ...formData, thresholdBlocked: parseFloat(e.target.value) })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>מרווח דמיון (Similarity Margin) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.similarityMargin}
-                  onChange={(e) =>
-                    setFormData({ ...formData, similarityMargin: parseFloat(e.target.value) })
                   }
                   required
                 />

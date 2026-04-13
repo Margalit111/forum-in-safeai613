@@ -28,7 +28,7 @@ export default function SafeAIUIPage() {
       return {
         user: parsedUser,
         role: storedRole as "admin" | "user",
-        section: (storedRole === "admin" ? "profiles" : "dashboard") as Section
+        section: (storedRole === "admin" ? "statistics" : "dashboard") as Section
       };
     }
     
@@ -94,6 +94,12 @@ export default function SafeAIUIPage() {
         <nav className="safeai-nav">
           {userRole === "admin" && (
             <>
+              <button
+                className={activeSection === "statistics" ? "nav-btn active" : "nav-btn"}
+                onClick={() => setActiveSection("statistics")}
+              >
+                📊 סטטיסטיקות
+              </button>
               <button
                 className={activeSection === "profiles" ? "nav-btn active" : "nav-btn"}
                 onClick={() => setActiveSection("profiles")}
