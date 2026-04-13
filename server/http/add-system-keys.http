@@ -1,0 +1,13 @@
+### יצירת Provider Key חדש
+
+POST http://localhost:3001/api/provider-keys
+Content-Type: application/json
+Authorization: Bearer <YOUR_ACCESS_TOKEN>
+
+{
+  "userId": "60d5ec49b1a7d65f8c4e1234",
+  "provider": "openai",
+  "apiKey": "sk-loremipsumdolorsitametconsecteturadipiscingelit-this-is-the-raw-key-to-be-encrypted",
+  "isSystem": true,
+  "isActive": true
+}

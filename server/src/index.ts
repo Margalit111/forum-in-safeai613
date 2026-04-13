@@ -1,66 +1,84 @@
 import "dotenv/config";
-import express from "express";
-import OpenAI from "openai";
-import filterRouter from "./filterRouter"; // ייבוא הראוטר
-import logger from "./logger";
 
-const app = express();
+import express from "express";
+import cors from "cors";
+import filterRouter from "./routes/filterRouter";
+import profileRouter from "./routes/profileRouter";
+import openaiRouter from "./routes/openaiRouter";
+import userRouter from "./routes/userRouter";
+import providerKeyRouter from "./routes/providerKeyRouter";
+import authRouter from "./routes/authRouter";
+import usageRouter from "./routes/usageRouter";
+import adminStatsRouter from "./routes/adminStatsRouter";
+
+import { requestLogger } from "./middleware/requestLogger";
+import { errorHandler } from "./middleware/errorHandler";
+import { connectDatabase } from "./config/db";
+import { authenticateToken, requireAdmin } from "./middleware/auth";
+
 const PORT = process.env.PORT || 3001;
 
-app.use(express.json());
+const app = express();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Enable CORS for all routes
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:3000"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+// הגדרה ל-50 מגה-בייט כדי להיות בטוחים
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+app.use(requestLogger);
+
+app.get("/health", (_req, res) => {
+  res.send("OK");
 });
 
-// הוספת הראוטר לאפליקציה
-app.use("/filter", filterRouter); // הוספת הראוטר
+// ===== Public Routes (No Authentication) =====
+app.use("/api/auth", authRouter);
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+// ===== JWT Protected Routes (User Self-Management) =====
+// Import the handler for self-profile updates
+import { updateOwnProfileHandler } from "./controllers/userController";
+app.patch("/api/users/:id", authenticateToken, updateOwnProfileHandler);
+app.use("/api/usage", usageRouter); // Already has authenticateToken inside
 
-//---------------continue613------------------
-app.post("/api/embed", async (req, res) => {
-  logger.info(
-    "Received request for embed with text: " +
-      req.body.text +
-      " || date and time: " +
-      new Date().toISOString(),
-  );
+
+// ===== JWT Protected Routes (Admin Panel & Management) =====
+app.use("/api/users", authenticateToken, requireAdmin, userRouter);
+app.use("/api/profiles", authenticateToken, profileRouter);
+app.use("/api/provider-keys", authenticateToken, providerKeyRouter);
+app.use("/api/filter", authenticateToken, filterRouter);
+app.use("/api/admin/stats", adminStatsRouter); // Admin stats already has auth middleware
+
+
+// ===== Public routes for filter evaluation =====
+app.use("/filter", filterRouter);
+
+
+// ===== Proxy API Key Protected Routes (LiteLLM Proxy) =====
+app.use("/v1", openaiRouter); // Uses proxyAuth middleware in the router
+
+
+
+app.use(errorHandler);
+
+async function start() {
   try {
-    const { text } = req.body;
-    console.log("embed", text);
+    await connectDatabase();
 
-    if (!text) {
-      return res.status(400).json({ error: "missing text" });
-    }
-
-    const response = await openai.embeddings.create({
-      model: "text-embedding-3-large",
-      input: text,
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
 
-    res.json({
-      embedding: response.data[0]?.embedding || [],
-    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "embedding failed" });
+    console.error("Startup failed:", err);
+    process.exit(1);
   }
-});
-app.get("/api/retry/:id", async (req, res) => {
-  logger.info(
-    "Received request for retry: " +
-      req.params.id +
-      " || date and time: " +
-      new Date().toISOString(),
-  );
-  res.json({
-    isAllowed: true,
-  });
-});
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+start();

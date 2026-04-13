@@ -8,12 +8,12 @@ import tableReducer from "../features/tabl_data/tableSlice";
 
 export const store = configureStore({
   reducer: {
+    tasks: tasksReducer,
+    historys: historyReducer, 
+    table: tableReducer,     
     filterManagement: filterManagementReducer,
     example: exampleReducer,
     inquiries: inquiriesReducer,
-    tasks: tasksReducer,
-    historys: historyReducer,
-    table: tableReducer,  
   },
 });
 
