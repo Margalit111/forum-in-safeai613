@@ -21,6 +21,7 @@ import {
 } from "../types/proxyTypes";
 
 import { openai } from "../config/openai";
+import { getFullProfileById } from "../repositories/profileRepository";
 
 export async function getEmbeddings(categories: string[] = []) {
   return Embedding.find({ category: { $in: categories } });
@@ -52,9 +53,9 @@ export async function evaluateText(
     throw new Error("profileId and text are required");
   }
 
-  const { AIProfile, EvaluationLog } = await import("../models");
+  const { EvaluationLog } = await import("../models");
 
-  const profile = await AIProfile.findById(profileId);
+  const profile = await getFullProfileById(profileId);
   if (!profile) {
     throw new Error("AIProfile not found");
   }

@@ -24,8 +24,8 @@ export interface AIProfileDoc extends mongoose.Document {
 const AIProfileSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    allowedCategories: [{ type: String, lowercase: true, trim: true }],
-    blockedCategories: [{ type: String, lowercase: true, trim: true }],
+    allowedCategories: [{ type: String, lowercase: true, trim: true, select: false }],
+    blockedCategories: [{ type: String, lowercase: true, trim: true, select: false }],
     thresholdAllowed: { type: Number, default: 0.25 },
     thresholdBlocked: { type: Number, default: 0.25 },
     similarityMargin: { type: Number, default: 0.05 },
@@ -36,9 +36,9 @@ const AIProfileSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    contentPrompts: [String],
-    behaviorPrompts: [String],
-    knowledgePrompts: [String],
+    contentPrompts:  { type: [String], select: false },
+    behaviorPrompts:  { type: [String], select: false },
+    knowledgePrompts:  { type: [String], select: false },
   },
   { timestamps: true },
 );
