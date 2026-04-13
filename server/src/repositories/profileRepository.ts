@@ -28,3 +28,22 @@ export async function updateProfile(profileId: string, data: Partial<AIProfileDo
 export async function deleteProfile(profileId: string) {
   return AIProfile.findByIdAndDelete(profileId).lean();
 }
+
+// Full profile includes the fields that are normally excluded for security reasons (like allowed/blocked categories and prompts)
+
+export async function getFullProfileById(profileId: string) {
+  return AIProfile.findById(profileId)
+    .select(
+      "+allowedCategories +blockedCategories +contentPrompts +behaviorPrompts +knowledgePrompts"
+    )
+    .lean();
+}
+
+export async function getFullProfiles() {
+  return AIProfile.find()
+    .select(
+      "+allowedCategories +blockedCategories +contentPrompts +behaviorPrompts +knowledgePrompts"
+    )
+    .sort({ createdAt: -1 })
+    .lean();
+}
