@@ -123,7 +123,7 @@ export async function evaluateText(
     "allowed categories:" +
     (profile.allowedCategories ?? []).join(", ") +
     " " +
-    "allowed categories:" +
+    "blocked categories:" +
     (profile.blockedCategories ?? []).join(", ");
 
   logger.info("profileDesc: " + profileDesc);
