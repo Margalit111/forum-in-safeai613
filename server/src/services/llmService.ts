@@ -34,6 +34,8 @@ export async function getLLMDecision(
     if (!content) return false;
 
     const decision = content.toLowerCase().trim();
+
+    logger.info(`LLM Decision: ${decision} for profile ${profileName}`);
     return decision === "allowed";
   } catch (error) {
     logger.error("LLM Decision failed", error);

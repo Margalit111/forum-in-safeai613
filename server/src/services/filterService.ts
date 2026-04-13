@@ -118,15 +118,16 @@ export async function evaluateText(
     );
   }
 
-
   // const isSafeByLLM = true;
-  const isSafeByLLM = await getLLMDecision(
-    text,
-    profile.name,
+  const profileDesc =
+    "allowed categories:" +
     (profile.allowedCategories ?? []).join(", ") +
-      " " +
-      (profile.blockedCategories ?? []).join(", "),
-  );
+    " " +
+    "allowed categories:" +
+    (profile.blockedCategories ?? []).join(", ");
+
+  logger.info("profileDesc: " + profileDesc);
+  const isSafeByLLM = await getLLMDecision(text, profile.name, profileDesc);
 
   if (isSafeByLLM) {
     finalAllowed = true;
@@ -140,7 +141,7 @@ export async function evaluateText(
     await EvaluationLog.create({
       profileId: profile._id,
       text,
-      vectorScores: {  },
+      vectorScores: {},
       initialDecision: reason,
       llmFinalDecision: finalAllowed ? "allowed" : "blocked",
     });
