@@ -71,8 +71,8 @@ export async function register(data: {
       email: data.email.toLowerCase(),
       password: hashedPassword,
       name: data.name,
-      organization: data.organization || undefined,
-      profileId: data.profileId || undefined,
+      ...(data.organization && { organization: data.organization }),
+      ...(data.profileId && { profileId: data.profileId }),
       mode: data.mode || "BYOK",
       role: "user", // Always start as user, admin can promote later
       proxyKeyHash,
@@ -86,7 +86,7 @@ export async function register(data: {
     });
 
     // Send verification email
-    await sendVerificationEmail(user.email, verificationToken, user.name);
+    await sendVerificationEmail(user.email, verificationToken, user.name || undefined);
 
     // Generate JWT tokens
     const tokens = generateTokenPair({
