@@ -22,7 +22,14 @@ import {
 export async function registerHandler(req: Request, res: Response) {
   try {
     const data = validateRequest(registerSchema, req.body);
-    const result = await authService.register(data);
+    const result = await authService.register({
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      ...(data.organization && { organization: data.organization }),
+      ...(data.profileId && { profileId: data.profileId }),
+      mode: data.mode,
+    });
 
     res.status(201).json({
       success: true,
