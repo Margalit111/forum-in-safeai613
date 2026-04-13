@@ -183,7 +183,8 @@ Content-Type: application/json
 
 ###
 
-POST https://ai613.autodidact.co.il/console/api/filter/evaluate
+# POST https://ai613.autodidact.co.il/console/api/filter/evaluate
+POST http://localhost:3001/filter/evaluate
 Content-Type: application/json
 
 {

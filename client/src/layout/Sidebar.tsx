@@ -4,16 +4,19 @@ const navItems = [
   { to: "/", label: "דף הבית" },
   { to: "/safeai-ui", label: "SafeAI UI" },
   { to: "/home", label: "לוח בקרה" },
-  { to: "/tasks", label: "ניהול משימות" },
-  { to: "/users", label: "משתמשים" },
-  { to: "/groups", label: "קבוצות" },
-  { to: "/models", label: "מודלים" },
-  { to: "/agents", label: "סוכנים" },
-  { to: "/api-keys", label: "מפתחות API" },
-  { to: "/stats", label: "סטטיסטיקות שימוש" },
-  { to: "/tabl_data", label: "טבלת נתונים" },
-  { to: "/data-history", label: "היסטוריית נתונים" },
-  { to: "/filter-admin", label: "ניהול פילטרים" },
+  { to: "/", label: "Dashboard" },
+
+  // management
+  { to: "/tasks", label: "Tasks Manager" }, 
+  { to: "/users", label: "Users" },
+  { to: "/prompts", label: "Prompts" },
+  { to: "/models", label: "Models" },
+  { to: "/agents", label: "Agents" },
+  { to: "/api-keys", label: "API Keys" },
+  { to: "/stats", label: "Usage" },
+  { to: "/inquiry-list", label: "Inquiries List" },
+  { to: "/table-data", label: "Table Data" },
+  { to: "/data-history", label: "Data History" },
 ];
 
 export default function Sidebar() {

@@ -44,6 +44,8 @@ app.use("/api/auth", authRouter);
 // Import the handler for self-profile updates
 import { updateOwnProfileHandler } from "./controllers/userController";
 app.patch("/api/users/:id", authenticateToken, updateOwnProfileHandler);
+app.use("/api/usage", usageRouter); // Already has authenticateToken inside
+
 
 // ===== JWT Protected Routes (Admin Panel & Management) =====
 app.use("/api/users", authenticateToken, requireAdmin, userRouter);
@@ -51,7 +53,10 @@ app.use("/api/profiles", authenticateToken, profileRouter);
 app.use("/api/provider-keys", authenticateToken, providerKeyRouter);
 app.use("/api/filter", authenticateToken, filterRouter);
 
-app.use("/api/usage", usageRouter); // Already has authenticateToken inside
+
+// ===== Public routes for filter evaluation =====
+app.use("/filter", filterRouter);
+
 
 // ===== Proxy API Key Protected Routes (LiteLLM Proxy) =====
 app.use("/v1", openaiRouter); // Uses proxyAuth middleware in the router
