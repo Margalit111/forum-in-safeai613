@@ -46,6 +46,8 @@ model_list:
     litellm_params:
       model: anthropic/claude-haiku-4-5
 
+
+      
   # =========================
   # Google Gemini
   # =========================
@@ -73,7 +75,7 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.5-flash-lite
 
-  # =========================
+      # =========================
   # Groq
   # =========================
   - model_name: groq-compound
@@ -108,14 +110,12 @@ model_list:
     litellm_params:
       model: groq/qwen/qwen3-32b
 
+  
 
-      
 litellm_settings:
   drop_params: true
   # חשוב! מאפשר העברת API keys דינמית
   allow_user_auth: true
   # אופציונלי - logging
-  success_callback: 
-      - cost_tracking
-      - langfuse
+  success_callback: ["langfuse"]
   set_verbose: False # מומלץ לכבות ב-Production כדי לחסוך בלוגים

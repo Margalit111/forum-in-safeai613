@@ -20,20 +20,30 @@ interface LogUsageParams {
   success: boolean;
   errorMessage?: string;
   isFree?: boolean;
+  cost?: number;
 }
 
 /**
  * Extracts usage data from LiteLLM response
  */
-function extractUsageData(response: any) {
+function extractUsageData(response: any, fallbackCost: number = 0) {
   const usage = response?.usage || {};
   const hiddenParams = response?._hidden_params || {};
+
+  // Fix: Use fallbackCost if LiteLLM doesn't provide cost or provides 0
+  let cost = hiddenParams.response_cost;
+  if (!cost || cost === 0) {
+    cost = fallbackCost;
+    console.log(`[extractUsageData] Using fallback cost: $${cost.toFixed(6)}`);
+  } else {
+    console.log(`[extractUsageData] Using LiteLLM cost: $${cost.toFixed(6)}`);
+  }
 
   return {
     promptTokens: usage.prompt_tokens || 0,
     completionTokens: usage.completion_tokens || 0,
     totalTokens: usage.total_tokens || 0,
-    cost: hiddenParams.response_cost || 0,
+    cost: cost,
     requestId: response?.id || undefined,
   };
 }
@@ -54,10 +64,11 @@ export async function logUsage(params: LogUsageParams): Promise<void> {
       success,
       errorMessage,
       isFree = false,
+      cost = 0,
     } = params;
 
     // Extract usage data from LiteLLM response
-    const usageData = extractUsageData(response);
+    const usageData = extractUsageData(response, cost);
 
     // Calculate expiration date (60 days from now)
     const expiresAt = new Date();
