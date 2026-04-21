@@ -201,7 +201,7 @@ export async function proxyChatCompletion(user: any, body: any) {
     }
 
     const decoder = new TextDecoder();
-    let accumulatedUsage = {
+    const accumulatedUsage = {
       prompt_tokens: 0,
       completion_tokens: 0,
       total_tokens: 0,
@@ -483,7 +483,7 @@ export async function proxyResponses(user: any, body: any) {
     if (!reader) throw new Error("Failed to get stream reader");
 
     const decoder = new TextDecoder();
-    let usage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+    const usage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
     let responseId = "streaming";
     let responseCost = 0;
 
@@ -496,7 +496,7 @@ export async function proxyResponses(user: any, body: any) {
             if (done) {
               const responseTime = Date.now() - startTime;
               const normalizedModel = normalizeModelName(model, provider);
-              let streamCost =
+              const streamCost =
                 responseCost || calculateCostFromTokens(usage, normalizedModel);
 
               logUsage({
