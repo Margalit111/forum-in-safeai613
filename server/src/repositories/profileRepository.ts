@@ -7,7 +7,10 @@ export async function createProfile(data: Partial<AIProfileDoc>) {
 }
 
 export async function getProfiles() {
-  return AIProfile.find().sort({ createdAt: -1 }).lean();
+  return AIProfile.find({
+    approvalStatus: 'approved',
+    visibility: 'public'
+  }).sort({ createdAt: -1 }).lean();
 }
 
 export async function getProfileById(profileId: string) {
@@ -40,6 +43,24 @@ export async function getFullProfileById(profileId: string) {
 }
 
 export async function getFullProfiles() {
+  return AIProfile.find({
+    approvalStatus: 'approved',
+    visibility: 'public'
+  })
+    .select(
+      "+allowedCategories +blockedCategories +contentPrompts +behaviorPrompts +knowledgePrompts"
+    )
+    .sort({ createdAt: -1 })
+    .lean();
+}
+
+export async function getAllProfiles() {
+  return AIProfile.find()
+    .sort({ createdAt: -1 })
+    .lean();
+}
+
+export async function getAllFullProfiles() {
   return AIProfile.find()
     .select(
       "+allowedCategories +blockedCategories +contentPrompts +behaviorPrompts +knowledgePrompts"

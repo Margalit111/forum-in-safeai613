@@ -11,7 +11,23 @@ export async function createProfile(data: any) {
 }
 
 export async function getProfiles() {
+  return AIProfile.find({
+    approvalStatus: 'approved',
+    visibility: 'public'
+  }).sort({ createdAt: -1 }).lean();
+}
+
+export async function getAllProfiles() {
   return AIProfile.find().sort({ createdAt: -1 }).lean();
+}
+
+export async function getAllFullProfiles() {
+  return AIProfile.find()
+    .select(
+      "+allowedCategories +blockedCategories +contentPrompts +behaviorPrompts +knowledgePrompts"
+    )
+    .sort({ createdAt: -1 })
+    .lean();
 }
 
 export async function getProfileById(profileId: string) {

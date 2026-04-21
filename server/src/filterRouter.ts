@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import logger from "./logger";
 import OpenAI from "openai";
+import { getLLMDecision } from "./services/llmService";
 
 /* ============================================================
    OpenAI Client
@@ -356,43 +357,6 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return denominator === 0 ? 0 : dot / denominator;
 }
 
-async function getLLMDecision(
-  text: string,
-  profileName: string,
-  profileDesc: string,
-): Promise<boolean> {
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `You are a content filter for the profile: ${profileName} - ${profileDesc}.
-           Your task is to determine if the text is safe and appropriate according to conservative education values. 
-           In your response, do not reference the following topics in any way: <Other religions besides orthodox jewisem, relationships with women, sexual relations, Sexual exploitation or harassment, rape, sex, violent, immodest, romantic, intimate content, including innuendo, venereal diseases, fertility, pills, gynecology,impossible to answer the question without referencing these forbidden topics, respond only with: blocked.
-           Even if the prohibited topics are requested inside a data structure such as an object, array, HTML page, or any other programming-related context, do not respond to them.           
-          Corresponding to the profile's values:
-           Respond only with "allowed" or "blocked".`,
-        },
-        { role: "user", content: text },
-      ],
-      max_tokens: 5,
-      temperature: 0,
-    });
 
-    // שימוש ב-Optional Chaining (?) ובדיקת קיום תוכן
-    const content = response.choices?.[0]?.message?.content;
-
-    if (!content) {
-      return false; // אם אין תוכן, נחמיר ונחסום
-    }
-
-    const decision = content.toLowerCase().trim();
-    return decision === "allowed";
-  } catch (error) {
-    logger.error("LLM Decision failed", error);
-    return false;
-  }
-}
 
 export default router;

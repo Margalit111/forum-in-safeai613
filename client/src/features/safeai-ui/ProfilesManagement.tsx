@@ -16,6 +16,8 @@ interface Profile {
   contentPrompts?: string[];
   behaviorPrompts?: string[];
   knowledgePrompts?: string[];
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  visibility: 'public' | 'internal';
   createdAt?: string;
 }
 
@@ -40,6 +42,8 @@ export default function ProfilesManagement() {
     contentPrompts: [],
     behaviorPrompts: [],
     knowledgePrompts: [],
+    approvalStatus: 'pending',
+    visibility: 'public',
   });
 
   useEffect(() => {
@@ -48,7 +52,8 @@ export default function ProfilesManagement() {
 
   const fetchProfiles = async () => {
     try {
-      const data = await apiCall<Profile[]>(API_ENDPOINTS.profiles);
+      // Admin should see all profiles with full details (categories and prompts)
+      const data = await apiCall<Profile[]>(`${API_ENDPOINTS.profiles}/admin/full`);
       setProfiles(data);
     } catch (error) {
       console.error("Failed to fetch profiles:", error);
@@ -138,6 +143,8 @@ export default function ProfilesManagement() {
       contentPrompts: profile.contentPrompts || [],
       behaviorPrompts: profile.behaviorPrompts || [],
       knowledgePrompts: profile.knowledgePrompts || [],
+      approvalStatus: profile.approvalStatus,
+      visibility: profile.visibility,
     });
     setShowEditModal(true);
   };
@@ -155,6 +162,8 @@ export default function ProfilesManagement() {
       contentPrompts: [],
       behaviorPrompts: [],
       knowledgePrompts: [],
+      approvalStatus: 'pending',
+      visibility: 'public',
     });
   };
 
@@ -214,6 +223,24 @@ export default function ProfilesManagement() {
                   <span className="item-detail-label">אימייל:</span>
                   <span className="item-detail-value">{profile.creatorEmail}</span>
                 </div>
+                <div className="item-detail">
+                  <span className="item-detail-label">סטטוס אישור:</span>
+                  <span className={`badge ${
+                    profile.approvalStatus === 'approved' ? 'badge-success' : 
+                    profile.approvalStatus === 'rejected' ? 'badge-danger' : 
+                    'badge-warning'
+                  }`}>
+                    {profile.approvalStatus === 'approved' ? '✅ מאושר' : 
+                     profile.approvalStatus === 'rejected' ? '❌ נדחה' : 
+                     '⏳ ממתין לאישור'}
+                  </span>
+                </div>
+                <div className="item-detail">
+                  <span className="item-detail-label">נראות:</span>
+                  <span className={`badge ${profile.visibility === 'public' ? 'badge-info' : 'badge-secondary'}`}>
+                    {profile.visibility === 'public' ? '🌐 ציבורי' : '🔒 פנימי'}
+                  </span>
+                </div>
                 {profile.allowedCategories && profile.allowedCategories.length > 0 && (
                   <div className="item-detail">
                     <span className="item-detail-label">קטגוריות מותרות:</span>
@@ -230,30 +257,44 @@ export default function ProfilesManagement() {
                     </span>
                   </div>
                 )}
-                {profile.contentPrompts && profile.contentPrompts.length > 0 && (
-                  <div className="item-detail">
-                    <span className="item-detail-label">Content Prompts:</span>
-                    <span className="item-detail-value">
-                      {profile.contentPrompts.length}
-                    </span>
-                  </div>
-                )}
-                {profile.behaviorPrompts && profile.behaviorPrompts.length > 0 && (
-                  <div className="item-detail">
-                    <span className="item-detail-label">Behavior Prompts:</span>
-                    <span className="item-detail-value">
-                      {profile.behaviorPrompts.length}
-                    </span>
-                  </div>
-                )}
-                {profile.knowledgePrompts && profile.knowledgePrompts.length > 0 && (
-                  <div className="item-detail">
-                    <span className="item-detail-label">Knowledge Prompts:</span>
-                    <span className="item-detail-value">
-                      {profile.knowledgePrompts.length}
-                    </span>
-                  </div>
-                )}
+                <div style={{ marginTop: "10px", padding: "10px", backgroundColor: "#f8f9fa", borderRadius: "5px" }}>
+                  <strong style={{ display: "block", marginBottom: "5px" }}>📝 Prompts:</strong>
+                  {profile.contentPrompts && profile.contentPrompts.length > 0 && (
+                    <div style={{ marginBottom: "5px", fontSize: "13px" }}>
+                      <strong>Content:</strong> {profile.contentPrompts.length} prompt(s)
+                      <div style={{ marginTop: "3px", paddingRight: "10px", fontSize: "12px", color: "#666" }}>
+                        {profile.contentPrompts.map((prompt, idx) => (
+                          <div key={idx} style={{ marginBottom: "2px" }}>• {prompt.substring(0, 50)}{prompt.length > 50 ? '...' : ''}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {profile.behaviorPrompts && profile.behaviorPrompts.length > 0 && (
+                    <div style={{ marginBottom: "5px", fontSize: "13px" }}>
+                      <strong>Behavior:</strong> {profile.behaviorPrompts.length} prompt(s)
+                      <div style={{ marginTop: "3px", paddingRight: "10px", fontSize: "12px", color: "#666" }}>
+                        {profile.behaviorPrompts.map((prompt, idx) => (
+                          <div key={idx} style={{ marginBottom: "2px" }}>• {prompt.substring(0, 50)}{prompt.length > 50 ? '...' : ''}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {profile.knowledgePrompts && profile.knowledgePrompts.length > 0 && (
+                    <div style={{ fontSize: "13px" }}>
+                      <strong>Knowledge:</strong> {profile.knowledgePrompts.length} prompt(s)
+                      <div style={{ marginTop: "3px", paddingRight: "10px", fontSize: "12px", color: "#666" }}>
+                        {profile.knowledgePrompts.map((prompt, idx) => (
+                          <div key={idx} style={{ marginBottom: "2px" }}>• {prompt.substring(0, 50)}{prompt.length > 50 ? '...' : ''}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {(!profile.contentPrompts || profile.contentPrompts.length === 0) &&
+                   (!profile.behaviorPrompts || profile.behaviorPrompts.length === 0) &&
+                   (!profile.knowledgePrompts || profile.knowledgePrompts.length === 0) && (
+                    <div style={{ fontSize: "12px", color: "#999" }}>אין prompts מוגדרים</div>
+                  )}
+                </div>
               </div>
               <div className="item-card-footer" style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
                 <button
@@ -319,6 +360,31 @@ export default function ProfilesManagement() {
                   }
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label>סטטוס אישור *</label>
+                <select
+                  value={formData.approvalStatus}
+                  onChange={(e) => setFormData({ ...formData, approvalStatus: e.target.value as 'pending' | 'approved' | 'rejected' })}
+                  required
+                >
+                  <option value="pending">⏳ ממתין לאישור</option>
+                  <option value="approved">✅ מאושר</option>
+                  <option value="rejected">❌ נדחה</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>נראות *</label>
+                <select
+                  value={formData.visibility}
+                  onChange={(e) => setFormData({ ...formData, visibility: e.target.value as 'public' | 'internal' })}
+                  required
+                >
+                  <option value="public">🌐 ציבורי</option>
+                  <option value="internal">🔒 פנימי</option>
+                </select>
               </div>
 
               <hr style={{ margin: "20px 0" }} />
@@ -449,6 +515,31 @@ export default function ProfilesManagement() {
                   }
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label>סטטוס אישור *</label>
+                <select
+                  value={formData.approvalStatus}
+                  onChange={(e) => setFormData({ ...formData, approvalStatus: e.target.value as 'pending' | 'approved' | 'rejected' })}
+                  required
+                >
+                  <option value="pending">⏳ ממתין לאישור</option>
+                  <option value="approved">✅ מאושר</option>
+                  <option value="rejected">❌ נדחה</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>נראות *</label>
+                <select
+                  value={formData.visibility}
+                  onChange={(e) => setFormData({ ...formData, visibility: e.target.value as 'public' | 'internal' })}
+                  required
+                >
+                  <option value="public">🌐 ציבורי</option>
+                  <option value="internal">🔒 פנימי</option>
+                </select>
               </div>
 
               <hr style={{ margin: "20px 0" }} />

@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import {
   createProfile,
  getProfiles,
+  getAllProfiles,
+  getAllFullProfiles,
   getProfileById,
   updateProfile,
   deleteProfile,
@@ -65,5 +67,35 @@ export async function deleteProfileHandler(req: Request<{ id: string }>, res: Re
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: "Server error" });
+  }
+}
+
+export async function listAllProfilesHandler(_req: Request, res: Response) {
+  console.log("➡️ admin handler start - fetching all profiles");
+
+  try {
+    const profiles = await getAllProfiles();
+    console.log("✅ got all profiles (including pending/rejected/internal)");
+
+    res.json(profiles);
+  } catch (err) {
+    console.error("❌ error:", err);
+
+    res.status(500).json({ error: "Failed to fetch all profiles" });
+  }
+}
+
+export async function listAllFullProfilesHandler(_req: Request, res: Response) {
+  console.log("➡️ admin handler start - fetching all full profiles with prompts");
+
+  try {
+    const profiles = await getAllFullProfiles();
+    console.log("✅ got all full profiles with prompts and categories");
+
+    res.json(profiles);
+  } catch (err) {
+    console.error("❌ error:", err);
+
+    res.status(500).json({ error: "Failed to fetch all full profiles" });
   }
 }

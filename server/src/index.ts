@@ -10,6 +10,7 @@ import providerKeyRouter from "./routes/providerKeyRouter";
 import authRouter from "./routes/authRouter";
 import usageRouter from "./routes/usageRouter";
 import adminStatsRouter from "./routes/adminStatsRouter";
+import proxyKeyRouter from "./routes/proxyKeyRouter";
 
 import { requestLogger } from "./middleware/requestLogger";
 import { errorHandler } from "./middleware/errorHandler";
@@ -54,6 +55,7 @@ app.use("/api/usage", usageRouter); // Already has authenticateToken inside
 app.use("/api/users", authenticateToken, requireAdmin, userRouter);
 app.use("/api/profiles", authenticateToken, profileRouter);
 app.use("/api/provider-keys", authenticateToken, providerKeyRouter);
+app.use("/api/proxy-key", proxyKeyRouter); // User's own proxy key management
 app.use("/api/admin/stats", adminStatsRouter); // Admin stats already has auth middleware
 
 
