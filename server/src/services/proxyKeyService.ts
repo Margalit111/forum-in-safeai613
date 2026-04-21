@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getUserById, updateUser } from "../repositories/userRepository";
 import { encryptSecret, generateApiKey, getKeyPrefix, hashApiKey } from "../utils/crypto";
+import logger from "../logger";
 
 interface ProxyKeyInfo {
   proxyKeyPrefix: string;
@@ -69,7 +70,7 @@ export async function regenerateProxyKey(userId: string): Promise<RegenerateResu
           }
         );
       } catch (deleteError) {
-        console.warn("Failed to delete old LiteLLM key:", deleteError);
+        logger.warn("Failed to delete old LiteLLM key:", deleteError);
         // Continue anyway - we'll create a new key
       }
     }
@@ -122,7 +123,7 @@ export async function regenerateProxyKey(userId: string): Promise<RegenerateResu
     };
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("Failed to regenerate proxy key:", errorDetail);
+    logger.error("Failed to regenerate proxy key:", { error: errorDetail.message, stack: errorDetail.stack });
     throw new Error(
       `Failed to regenerate proxy key: ${JSON.stringify(errorDetail)}`
     );
@@ -151,7 +152,7 @@ export async function toggleProxyKeyStatus(
         // For now, we'll just update our database
         // In production, you might want to delete/recreate the key
       } catch (litellmError) {
-        console.warn("Failed to update LiteLLM key status:", litellmError);
+        logger.warn("Failed to update LiteLLM key status:", litellmError);
         // Continue anyway - we'll update our database
       }
     }
@@ -171,7 +172,7 @@ export async function toggleProxyKeyStatus(
     };
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("Failed to toggle proxy key status:", errorDetail);
+    logger.error("Failed to toggle proxy key status:", { error: errorDetail.message, stack: errorDetail.stack });
     throw new Error(
       `Failed to toggle proxy key status: ${JSON.stringify(errorDetail)}`
     );

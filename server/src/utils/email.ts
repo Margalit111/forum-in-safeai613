@@ -3,6 +3,7 @@
  */
 
 import nodemailer from "nodemailer";
+import logger from "../logger";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const EMAIL_FROM = process.env.EMAIL_FROM || "SafeAI <noreply@safeai.com>";
@@ -102,15 +103,15 @@ ${verificationUrl}
     const info = await transporter.sendMail(mailOptions);
     
     if (process.env.NODE_ENV !== "production") {
-      console.log("📧 Verification Email (DEV MODE):");
-      console.log("To:", email);
-      console.log("Verification URL:", verificationUrl);
-      console.log("---");
+      logger.debug("📧 Verification Email (DEV MODE):");
+      logger.info("To:", email);
+      logger.info("Verification URL:", verificationUrl);
+      logger.debug("---");
     }
     
     return info;
   } catch (error) {
-    console.error("Failed to send verification email:", error);
+    logger.error("Failed to send verification email:", { error: error.message, stack: error.stack });
     throw new Error("Failed to send verification email");
   }
 }
@@ -194,15 +195,15 @@ ${resetUrl}
     const info = await transporter.sendMail(mailOptions);
     
     if (process.env.NODE_ENV !== "production") {
-      console.log("📧 Password Reset Email (DEV MODE):");
-      console.log("To:", email);
-      console.log("Reset URL:", resetUrl);
-      console.log("---");
+      logger.debug("📧 Password Reset Email (DEV MODE):");
+      logger.info("To:", email);
+      logger.info("Reset URL:", resetUrl);
+      logger.debug("---");
     }
     
     return info;
   } catch (error) {
-    console.error("Failed to send password reset email:", error);
+    logger.error("Failed to send password reset email:", { error: error.message, stack: error.stack });
     throw new Error("Failed to send password reset email");
   }
 }
@@ -257,7 +258,7 @@ export async function sendWelcomeEmail(email: string, name: string, proxyApiKey:
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error("Failed to send welcome email:", error);
+    logger.error("Failed to send welcome email:", { error: error.message, stack: error.stack });
     // Don't throw - welcome email is not critical
   }
 }

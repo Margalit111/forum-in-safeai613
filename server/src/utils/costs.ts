@@ -1,3 +1,5 @@
+import logger from "../logger";
+
 export interface TokenUsage {
   prompt_tokens?: number;
   completion_tokens?: number;
@@ -122,12 +124,12 @@ export function calculateCostFromTokens(
   const pricing = MODEL_PRICING[model];
 
   if (!usage) {
-    console.warn(`[calculateCostFromTokens] No usage data provided for model: ${model}`);
+    logger.warn(`[calculateCostFromTokens] No usage data provided for model: ${model}`);
     return 0;
   }
 
   if (!pricing) {
-    console.warn(`[calculateCostFromTokens] No pricing found for model: ${model}. Available models:`, Object.keys(MODEL_PRICING).slice(0, 5));
+    logger.warn(`[calculateCostFromTokens] No pricing found for model: ${model}. Available models:`, Object.keys(MODEL_PRICING).slice(0, 5));
     return 0;
   }
 
@@ -135,7 +137,7 @@ export function calculateCostFromTokens(
   const completionTokens = usage.completion_tokens ?? 0;
   const calculatedCost = promptTokens * pricing.input + completionTokens * pricing.output;
 
-  console.log(`[calculateCostFromTokens] Model: ${model}, Prompt: ${promptTokens}, Completion: ${completionTokens}, Cost: $${calculatedCost.toFixed(6)}`);
+  logger.info(`[calculateCostFromTokens] Model: ${model}, Prompt: ${promptTokens}, Completion: ${completionTokens}, Cost: $${calculatedCost.toFixed(6)}`);
 
   return calculatedCost;
 }

@@ -8,6 +8,7 @@ import { OAuth2Client } from "google-auth-library";
 import * as userService from "../services/userService";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
 import crypto from "crypto";
+import logger from "../logger";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
@@ -37,7 +38,7 @@ export async function googleLoginHandler(req: Request, res: Response) {
 
     res.redirect(authUrl);
   } catch (error: any) {
-    console.error("Google login initiation error:", error);
+    logger.error("Google login initiation error:", { error: error.message, stack: error.stack });
     res.redirect(`${CLIENT_URL}/login?error=google_auth_failed`);
   }
 }
@@ -103,7 +104,7 @@ export async function googleCallbackHandler(req: Request, res: Response) {
       `googleAuth=true`
     );
   } catch (error: any) {
-    console.error("Google callback error:", error);
+    logger.error("Google callback error:", { error: error.message, stack: error.stack });
     res.redirect(`${CLIENT_URL}/login?error=google_auth_failed`);
   }
 }

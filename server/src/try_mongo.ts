@@ -6,9 +6,9 @@ const client = new MongoClient(uri);
 async function run() {
   try {
     await client.connect();
-    console.log("Connected successfully to Atlas");
+    logger.info("Connected successfully to Atlas");
   } catch (err) {
-    console.error("Connection error:", err);
+    logger.error("Connection error:", { error: err.message, stack: err.stack });
   } finally {
     await client.close();
   }

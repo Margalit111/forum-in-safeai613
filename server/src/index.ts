@@ -16,6 +16,7 @@ import { requestLogger } from "./middleware/requestLogger";
 import { errorHandler } from "./middleware/errorHandler";
 import { connectDatabase } from "./config/db";
 import { authenticateToken, requireAdmin } from "./middleware/auth";
+import logger from "./logger";
 
 const PORT = process.env.PORT || 3001;
 
@@ -75,11 +76,11 @@ async function start() {
     await connectDatabase();
 
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      logger.info(`Server running on port ${PORT}`);
     });
 
   } catch (err) {
-    console.error("Startup failed:", err);
+    logger.error("Startup failed:", err);
     process.exit(1);
   }
 }

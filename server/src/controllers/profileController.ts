@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import logger from "../logger";
 import {
   createProfile,
  getProfiles,
@@ -19,15 +20,15 @@ export async function createProfileHandler(req: Request, res: Response) {
 }
 
 export async function listProfilesHandler(_req: Request, res: Response) {
-    console.log("➡️ handler start");
+    logger.debug("➡️ handler start");
 
   try {
     const profiles = await getProfiles();
-        console.log("✅ got profiles");
+        logger.debug("✅ got profiles");
 
     res.json(profiles);
   } catch (err) {
-        console.error("❌ error:", err);
+        logger.error("❌ error:", { error: err.message, stack: err.stack });
 
     res.status(500).json({ error: "Failed to fetch profiles" });
   }
@@ -71,30 +72,30 @@ export async function deleteProfileHandler(req: Request<{ id: string }>, res: Re
 }
 
 export async function listAllProfilesHandler(_req: Request, res: Response) {
-  console.log("➡️ admin handler start - fetching all profiles");
+  logger.debug("➡️ admin handler start - fetching all profiles");
 
   try {
     const profiles = await getAllProfiles();
-    console.log("✅ got all profiles (including pending/rejected/internal)");
+    logger.debug("✅ got all profiles (including pending/rejected/internal)");
 
     res.json(profiles);
   } catch (err) {
-    console.error("❌ error:", err);
+    logger.error("❌ error:", { error: err.message, stack: err.stack });
 
     res.status(500).json({ error: "Failed to fetch all profiles" });
   }
 }
 
 export async function listAllFullProfilesHandler(_req: Request, res: Response) {
-  console.log("➡️ admin handler start - fetching all full profiles with prompts");
+  logger.debug("➡️ admin handler start - fetching all full profiles with prompts");
 
   try {
     const profiles = await getAllFullProfiles();
-    console.log("✅ got all full profiles with prompts and categories");
+    logger.debug("✅ got all full profiles with prompts and categories");
 
     res.json(profiles);
   } catch (err) {
-    console.error("❌ error:", err);
+    logger.error("❌ error:", { error: err.message, stack: err.stack });
 
     res.status(500).json({ error: "Failed to fetch all full profiles" });
   }

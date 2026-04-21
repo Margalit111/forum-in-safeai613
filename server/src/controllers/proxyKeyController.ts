@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { getProxyKeyInfo, regenerateProxyKey, toggleProxyKeyStatus } from "../services/proxyKeyService";
+import logger from "../logger";
 
 /**
  * Get current user's proxy key information
@@ -20,7 +21,7 @@ export async function getProxyKeyHandler(req: Request, res: Response) {
 
     res.json(keyInfo);
   } catch (error) {
-    console.error("Error fetching proxy key info:", error);
+    logger.error("Error fetching proxy key info:", { error: error.message, stack: error.stack });
     res.status(500).json({ error: "Failed to fetch proxy key information" });
   }
 }
@@ -49,7 +50,7 @@ export async function regenerateProxyKeyHandler(req: Request, res: Response) {
       keyInfo: result.keyInfo,
     });
   } catch (error: any) {
-    console.error("Error regenerating proxy key:", error);
+    logger.error("Error regenerating proxy key:", { error: error.message, stack: error.stack });
     res.status(500).json({ 
       error: "Failed to regenerate proxy key",
       details: error.message 
@@ -85,7 +86,7 @@ export async function toggleProxyKeyHandler(req: Request, res: Response) {
       keyInfo,
     });
   } catch (error: any) {
-    console.error("Error toggling proxy key status:", error);
+    logger.error("Error toggling proxy key status:", { error: error.message, stack: error.stack });
     res.status(500).json({ 
       error: "Failed to toggle proxy key status",
       details: error.message 

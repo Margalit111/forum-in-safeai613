@@ -1,6 +1,6 @@
 general_settings:
   master_key: sk-safe-ai-master-123
-  database_url: "postgresql://llm_user:llm_pass@db:5432/litellm_db"
+  database_url: "postgresql://neondb_owner:npg_t9fwjBvi4zun@ep-summer-pine-amhkzavh.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require"
   allow_user_auth_pass_through: true  # <--- זו ההגדרה הקריטית!
 
 model_list:
@@ -107,6 +107,34 @@ model_list:
   - model_name: qwen3-32b
     litellm_params:
       model: groq/qwen/qwen3-32b
+    # =========================
+  # OpenAI - Images
+  # =========================
+  - model_name: dall-e-3
+    litellm_params:
+      model: openai/dall-e-3
+
+  - model_name: dall-e-2
+    litellm_params:
+      model: openai/dall-e-2
+
+  # =========================
+  # OpenAI - Audio TTS
+  # =========================
+  - model_name: tts-1
+    litellm_params:
+      model: openai/tts-1
+
+  - model_name: tts-1-hd
+    litellm_params:
+      model: openai/tts-1-hd
+
+  # =========================
+  # OpenAI - Whisper
+  # =========================
+  - model_name: whisper-1
+    litellm_params:
+      model: openai/whisper-1
 
 
       

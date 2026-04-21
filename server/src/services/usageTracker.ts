@@ -34,9 +34,9 @@ function extractUsageData(response: any, fallbackCost: number = 0) {
   let cost = hiddenParams.response_cost;
   if (!cost || cost === 0) {
     cost = fallbackCost;
-    console.log(`[extractUsageData] Using fallback cost: $${cost.toFixed(6)}`);
+    logger.info(`[extractUsageData] Using fallback cost: $${cost.toFixed(6)}`);
   } else {
-    console.log(`[extractUsageData] Using LiteLLM cost: $${cost.toFixed(6)}`);
+    logger.info(`[extractUsageData] Using LiteLLM cost: $${cost.toFixed(6)}`);
   }
 
   return {
