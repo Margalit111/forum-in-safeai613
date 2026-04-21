@@ -111,7 +111,7 @@ ${verificationUrl}
     
     return info;
   } catch (error) {
-    logger.error("Failed to send verification email:", { error: error.message, stack: error.stack });
+    logger.error("Failed to send verification email:", { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
     throw new Error("Failed to send verification email");
   }
 }
@@ -203,7 +203,7 @@ ${resetUrl}
     
     return info;
   } catch (error) {
-    logger.error("Failed to send password reset email:", { error: error.message, stack: error.stack });
+    logger.error("Failed to send password reset email:", { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
     throw new Error("Failed to send password reset email");
   }
 }
@@ -258,7 +258,7 @@ export async function sendWelcomeEmail(email: string, name: string, proxyApiKey:
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    logger.error("Failed to send welcome email:", { error: error.message, stack: error.stack });
+    logger.error("Failed to send welcome email:", { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
     // Don't throw - welcome email is not critical
   }
 }

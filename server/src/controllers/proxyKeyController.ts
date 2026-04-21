@@ -21,7 +21,7 @@ export async function getProxyKeyHandler(req: Request, res: Response) {
 
     res.json(keyInfo);
   } catch (error) {
-    logger.error("Error fetching proxy key info:", { error: error.message, stack: error.stack });
+    logger.error("Error fetching proxy key info:", { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
     res.status(500).json({ error: "Failed to fetch proxy key information" });
   }
 }

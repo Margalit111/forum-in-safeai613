@@ -28,7 +28,7 @@ export async function listProfilesHandler(_req: Request, res: Response) {
 
     res.json(profiles);
   } catch (err) {
-        logger.error("❌ error:", { error: err.message, stack: err.stack });
+        logger.error("❌ error:", { error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined });
 
     res.status(500).json({ error: "Failed to fetch profiles" });
   }
@@ -80,7 +80,7 @@ export async function listAllProfilesHandler(_req: Request, res: Response) {
 
     res.json(profiles);
   } catch (err) {
-    logger.error("❌ error:", { error: err.message, stack: err.stack });
+    logger.error("❌ error:", { error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined });
 
     res.status(500).json({ error: "Failed to fetch all profiles" });
   }
@@ -95,7 +95,7 @@ export async function listAllFullProfilesHandler(_req: Request, res: Response) {
 
     res.json(profiles);
   } catch (err) {
-    logger.error("❌ error:", { error: err.message, stack: err.stack });
+    logger.error("❌ error:", { error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined });
 
     res.status(500).json({ error: "Failed to fetch all full profiles" });
   }

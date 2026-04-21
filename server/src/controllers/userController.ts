@@ -88,7 +88,7 @@ export async function updateOwnProfileHandler(req: Request<{ id: string }>, res:
 
     res.json(user);
   } catch (err) {
-    logger.error("Error updating profile:", { error: err.message, stack: err.stack });
+    logger.error("Error updating profile:", { error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined });
     res.status(500).json({ error: "Failed to update profile" });
   }
 }

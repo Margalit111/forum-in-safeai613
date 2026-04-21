@@ -113,10 +113,10 @@ export async function proxyChatCompletion(user: any, body: any) {
   //   text: userQuery,
   // });
 
-  const result = {allowed: true};
+  const result: {allowed: boolean; reason?: string} = {allowed: true};
 
   if (!result.allowed) {
-    throw new Error("Content blocked By SafeAI Filter: " + result.reason);
+    throw new Error("Content blocked By SafeAI Filter: " + (result.reason || "Unknown reason"));
   }
 
   // 4. הוספת system prompts
@@ -361,8 +361,8 @@ export async function proxyChatCompletion(user: any, body: any) {
     logger.debug("✅ Usage logged successfully");
   } catch (logError) {
     logger.error("❌ Failed to log usage:", {
-      error: logError.message,
-      stack: logError.stack,
+      error: logError instanceof Error ? logError.message : String(logError),
+      stack: logError instanceof Error ? logError.stack : undefined,
     });
   }
 
@@ -417,9 +417,9 @@ export async function proxyResponses(user: any, body: any) {
   }
 
   // const filterResult = await evaluateText({ profileId: profile._id?.toString(), text: userQuery });
-  const filterResult = { allowed: true };
+  const filterResult: {allowed: boolean; reason?: string} = { allowed: true };
   if (!filterResult.allowed) {
-    throw new Error("Content blocked By SafeAI Filter: " + filterResult.reason);
+    throw new Error("Content blocked By SafeAI Filter: " + (filterResult.reason || "Unknown reason"));
   }
 
   // System prompt מה-profile
