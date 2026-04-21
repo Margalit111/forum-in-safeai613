@@ -31,8 +31,12 @@ function getProviderFromModel(model: string): string {
   )
     return "groq";
 
-  if (lower.startsWith("dall-e") || lower.startsWith("tts") || lower.startsWith("whisper")) 
-  return "openai";
+  if (
+    lower.startsWith("dall-e") ||
+    lower.startsWith("tts") ||
+    lower.startsWith("whisper")
+  )
+    return "openai";
 
   throw new Error(`Unsupported model: ${model}`);
 }
@@ -108,22 +112,25 @@ export async function proxyChatCompletion(user: any, body: any) {
     userQuery = "No text content";
   }
 
-  // const result = await evaluateText({
-  //   profileId: profile ? profile._id?.toString() : "",
-  //   text: userQuery,
-  // });
-
-  const result: {allowed: boolean; reason?: string} = {allowed: true};
+  const result = await evaluateText({
+    profileId: profile ? profile._id?.toString() : "",
+    text: userQuery,
+  });
 
   if (!result.allowed) {
-    throw new Error("Content blocked By SafeAI Filter: " + (result.reason || "Unknown reason"));
+    throw new Error(
+      "Content blocked By SafeAI Filter: " +
+        (result.reason || "Unknown reason"),
+    );
   }
 
   // 4. הוספת system prompts
 
   const systemPrompt = [
-   `
-        `,
+    `
+    do not reference the following topics in any way: <Other religions besides orthodox jewisem, relationships with women, sexual relations, Sexual exploitation or harassment, rape, sex, violent, immodest, romantic, intimate content, including innuendo, venereal diseases, fertility, pills, gynecology,impossible to answer the question without referencing these forbidden topics, respond only with: blocked.
+     Even if the prohibited topics are requested inside a data structure such as an object, array, HTML page, or any other embedded way , do not respond to them.           
+`,
     ...(profile?.contentPrompts || []),
     ...(profile?.behaviorPrompts || []),
     ...(profile?.knowledgePrompts || []),
@@ -370,7 +377,6 @@ export async function proxyChatCompletion(user: any, body: any) {
   return data;
 }
 
-
 export async function proxyResponses(user: any, body: any) {
   const startTime = Date.now();
   const model = body.model;
@@ -410,20 +416,29 @@ export async function proxyResponses(user: any, body: any) {
               .filter((p: any) => p.type === "text")
               .map((p: any) => p.text)
           : typeof item.content === "string"
-          ? [item.content]
-          : []
+            ? [item.content]
+            : [],
       )
       .join("\n");
   }
 
-  // const filterResult = await evaluateText({ profileId: profile._id?.toString(), text: userQuery });
-  const filterResult: {allowed: boolean; reason?: string} = { allowed: true };
+  const filterResult = await evaluateText({
+    profileId: profile._id?.toString(),
+    text: userQuery,
+  });
   if (!filterResult.allowed) {
-    throw new Error("Content blocked By SafeAI Filter: " + (filterResult.reason || "Unknown reason"));
+    throw new Error(
+      "Content blocked By SafeAI Filter: " +
+        (filterResult.reason || "Unknown reason"),
+    );
   }
 
   // System prompt מה-profile
   const systemPrompt = [
+    `
+     do not reference the following topics in any way: <Other religions besides orthodox jewisem, relationships with women, sexual relations, Sexual exploitation or harassment, rape, sex, violent, immodest, romantic, intimate content, including innuendo, venereal diseases, fertility, pills, gynecology,impossible to answer the question without referencing these forbidden topics, respond only with: blocked.
+           Even if the prohibited topics are requested inside a data structure such as an object, array, HTML page, or any other embedded way , do not respond to them.           
+`,
     ...(profile?.contentPrompts || []),
     ...(profile?.behaviorPrompts || []),
     ...(profile?.knowledgePrompts || []),
@@ -453,7 +468,7 @@ export async function proxyResponses(user: any, body: any) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(requestBody),
-    }
+    },
   );
 
   if (!litellmResponse.ok) {
@@ -481,7 +496,8 @@ export async function proxyResponses(user: any, body: any) {
             if (done) {
               const responseTime = Date.now() - startTime;
               const normalizedModel = normalizeModelName(model, provider);
-              let streamCost = responseCost || calculateCostFromTokens(usage, normalizedModel);
+              let streamCost =
+                responseCost || calculateCostFromTokens(usage, normalizedModel);
 
               logUsage({
                 userId: user._id.toString(),
@@ -489,12 +505,21 @@ export async function proxyResponses(user: any, body: any) {
                 provider,
                 modelName: model,
                 mode: user.mode,
-                response: { id: responseId, usage, _hidden_params: { response_cost: responseCost } },
+                response: {
+                  id: responseId,
+                  usage,
+                  _hidden_params: { response_cost: responseCost },
+                },
                 responseTime,
                 success: true,
                 isFree,
                 cost: streamCost,
-              }).catch((err) => logger.error("❌ Failed to log streaming responses usage:", err));
+              }).catch((err) =>
+                logger.error(
+                  "❌ Failed to log streaming responses usage:",
+                  err,
+                ),
+              );
 
               controller.close();
               break;
@@ -511,11 +536,15 @@ export async function proxyResponses(user: any, body: any) {
                 const parsed = JSON.parse(data);
 
                 // Responses API - usage מגיע ב-response.completed event
-                if (parsed.type === "response.completed" && parsed.response?.usage) {
+                if (
+                  parsed.type === "response.completed" &&
+                  parsed.response?.usage
+                ) {
                   const u = parsed.response.usage;
                   usage.prompt_tokens = u.input_tokens || 0;
                   usage.completion_tokens = u.output_tokens || 0;
-                  usage.total_tokens = (u.input_tokens || 0) + (u.output_tokens || 0);
+                  usage.total_tokens =
+                    (u.input_tokens || 0) + (u.output_tokens || 0);
                 }
 
                 if (parsed._hidden_params?.response_cost) {
@@ -549,7 +578,8 @@ export async function proxyResponses(user: any, body: any) {
   const usageNormalized = {
     prompt_tokens: data.usage?.input_tokens || 0,
     completion_tokens: data.usage?.output_tokens || 0,
-    total_tokens: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+    total_tokens:
+      (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
   };
 
   const normalizedModel = normalizeModelName(model, provider);
@@ -585,7 +615,6 @@ export async function proxyResponses(user: any, body: any) {
   return data;
 }
 
-
 // ========== IMAGE GENERATION ==========
 export async function proxyImageGeneration(user: any, body: any) {
   const startTime = Date.now();
@@ -614,10 +643,10 @@ export async function proxyImageGeneration(user: any, body: any) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ ...body, api_key: providerApiKey }),
-    }
+    },
   );
 
-    if (!litellmResponse.ok) {
+  if (!litellmResponse.ok) {
     const err = await litellmResponse.text();
     throw new Error(`LiteLLM image generation failed: ${err}`);
   }
@@ -641,13 +670,11 @@ export async function proxyImageGeneration(user: any, body: any) {
   return data;
 }
 
-
-
 // ========== AUDIO TRANSCRIPTION (Whisper) ==========
 export async function proxyAudioTranscription(
   user: any,
-  formData: FormData,  // מגיע מה-multipart
-  model: string = "whisper-1"
+  formData: FormData, // מגיע מה-multipart
+  model: string = "whisper-1",
 ) {
   const startTime = Date.now();
   const provider = getProviderFromModel(model);
@@ -675,9 +702,8 @@ export async function proxyAudioTranscription(
         // Content-Type לא מוגדר - fetch יוסיף boundary אוטומטית ל-multipart
       },
       body: formData,
-    }
+    },
   );
-
 
   if (!litellmResponse.ok) {
     const err = await litellmResponse.text();
@@ -702,7 +728,6 @@ export async function proxyAudioTranscription(
 
   return data;
 }
-
 
 // ========== AUDIO SPEECH (TTS) ==========
 export async function proxyAudioSpeech(user: any, body: any) {
@@ -732,7 +757,7 @@ export async function proxyAudioSpeech(user: any, body: any) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ ...body, api_key: providerApiKey }),
-    }
+    },
   );
 
   if (!litellmResponse.ok) {
@@ -740,7 +765,7 @@ export async function proxyAudioSpeech(user: any, body: any) {
     throw new Error(`LiteLLM TTS failed: ${err}`);
   }
 
-    // TTS מחזיר binary audio - לא JSON!
+  // TTS מחזיר binary audio - לא JSON!
   const audioBuffer = await litellmResponse.arrayBuffer();
   const contentType =
     litellmResponse.headers.get("content-type") || "audio/mpeg";
