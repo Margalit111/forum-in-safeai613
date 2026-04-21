@@ -38,30 +38,30 @@ app.use(requestLogger);
 
 
 
-app.get("/api/health", (_req, res) => {
+app.get("/health", (_req, res) => {
   res.send("OK");
 });
 
 // ===== Public Routes (No Authentication) =====
-app.use("/api/auth", authRouter);
+app.use("/auth", authRouter);
 
 // ===== JWT Protected Routes (User Self-Management) =====
 // Import the handler for self-profile updates
 import { updateOwnProfileHandler } from "./controllers/userController";
-app.patch("/api/users/:id", authenticateToken, updateOwnProfileHandler);
-app.use("/api/usage", usageRouter); // Already has authenticateToken inside
+app.patch("/users/:id", authenticateToken, updateOwnProfileHandler);
+app.use("/usage", usageRouter); // Already has authenticateToken inside
 
 
 // ===== JWT Protected Routes (Admin Panel & Management) =====
-app.use("/api/users", authenticateToken, requireAdmin, userRouter);
-app.use("/api/profiles", authenticateToken, profileRouter);
-app.use("/api/provider-keys", authenticateToken, providerKeyRouter);
-app.use("/api/proxy-key", proxyKeyRouter); // User's own proxy key management
-app.use("/api/admin/stats", adminStatsRouter); // Admin stats already has auth middleware
+app.use("/users", authenticateToken, requireAdmin, userRouter);
+app.use("/profiles", authenticateToken, profileRouter);
+app.use("/provider-keys", authenticateToken, providerKeyRouter);
+app.use("/proxy-key", proxyKeyRouter); // User's own proxy key management
+app.use("/admin/stats", adminStatsRouter); // Admin stats already has auth middleware
 
 
 // ===== Public routes for filter evaluation =====
-app.use("/api/filter", filterRouter);
+app.use("/filter", filterRouter);
 
 
 // ===== Proxy API Key Protected Routes (LiteLLM Proxy) =====
