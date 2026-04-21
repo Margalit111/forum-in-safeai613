@@ -19,6 +19,12 @@ export const API_ENDPOINTS = {
   users: `${API_BASE_URL}/api/users`,
   filter: `${API_BASE_URL}/api/filter`,
   providerKeys: `${API_BASE_URL}/api/provider-keys`,
+  // Proxy key endpoints (user's own proxy key)
+  proxyKey: {
+    info: `${API_BASE_URL}/api/proxy-key`,
+    regenerate: `${API_BASE_URL}/api/proxy-key/regenerate`,
+    toggle: `${API_BASE_URL}/api/proxy-key/toggle`,
+  },
   // Usage endpoints
   usage: {
     stats: `${API_BASE_URL}/api/usage/stats`,

@@ -19,6 +19,8 @@ export interface AIProfileDoc extends mongoose.Document {
   contentPrompts?: string[];
   behaviorPrompts?: string[];
   knowledgePrompts?: string[];
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  visibility: 'public' | 'internal';
 }
 
 const AIProfileSchema = new mongoose.Schema(
@@ -39,12 +41,23 @@ const AIProfileSchema = new mongoose.Schema(
     contentPrompts:  { type: [String], select: false },
     behaviorPrompts:  { type: [String], select: false },
     knowledgePrompts:  { type: [String], select: false },
+    approvalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+    visibility: {
+      type: String,
+      enum: ['public', 'internal'],
+      default: 'public',
+    },
   },
   { timestamps: true },
 );
 
 AIProfileSchema.index({ creatorEmail: 1 });
 AIProfileSchema.index({ name: 1 });
+AIProfileSchema.index({ approvalStatus: 1, visibility: 1 });
 
 
 export const AIProfile = mongoose.model<AIProfileDoc>("AIProfile", AIProfileSchema, "ai-profiles");

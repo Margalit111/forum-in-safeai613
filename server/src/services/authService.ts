@@ -9,6 +9,7 @@ import { generateTokenPair, generateRandomToken, verifyRefreshToken } from "../u
 import { sendVerificationEmail, sendPasswordResetEmail } from "../utils/email";
 import { encryptSecret, generateApiKey, getKeyPrefix, hashApiKey } from "../utils/crypto";
 import axios from "axios";
+import logger from "../logger";
 
 const SALT_ROUNDS = 10;
 
@@ -107,7 +108,7 @@ export async function register(data: {
     };
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    console.error("Registration failed:", errorDetail);
+    logger.error("Registration failed:", { error: errorDetail.message, stack: errorDetail.stack });
     throw new Error(
       `ההרשמה נכשלה: ${error.message || "שגיאה בתקשורת עם השרת"}`
     );

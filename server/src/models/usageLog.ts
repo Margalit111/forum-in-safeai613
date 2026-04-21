@@ -13,23 +13,23 @@ export interface UsageLogDoc extends mongoose.Document {
   provider: string;
   modelName: string;
   mode: "BYOK" | "MANAGED";
-  
+
   // Token usage
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
-  
+
   // Cost tracking
-  cost: number;              // Cost from LiteLLM
-  isFree: boolean;           // Whether this is a free provider key
-  
+  cost: number; // Final calculated cost (LiteLLM or app fallback)
+  isFree: boolean; // Whether this is a free provider key
+
   // Request metadata
   requestId?: string;
   timestamp: Date;
-  responseTime: number;      // milliseconds
+  responseTime: number; // milliseconds
   success: boolean;
   errorMessage?: string;
-  
+
   // TTL - auto-delete after 60 days
   expiresAt: Date;
 }
@@ -63,7 +63,7 @@ const UsageLogSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    
+
     // Token usage
     promptTokens: {
       type: Number,
@@ -78,7 +78,7 @@ const UsageLogSchema = new mongoose.Schema(
       default: 0,
       index: true,
     },
-    
+
     // Cost tracking
     cost: {
       type: Number,
@@ -90,7 +90,7 @@ const UsageLogSchema = new mongoose.Schema(
       default: false,
       index: true,
     },
-    
+
     // Request metadata
     requestId: String,
     timestamp: {
@@ -108,14 +108,14 @@ const UsageLogSchema = new mongoose.Schema(
       index: true,
     },
     errorMessage: String,
-    
+
     // TTL - auto-delete after 60 days
     expiresAt: {
       type: Date,
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // TTL index - MongoDB will automatically delete documents after expiresAt

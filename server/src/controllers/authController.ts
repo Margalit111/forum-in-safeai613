@@ -14,6 +14,7 @@ import {
   resetPasswordSchema,
   verifyEmailSchema,
 } from "../utils/validation";
+import logger from "../logger";
 
 /**
  * Register a new user
@@ -40,7 +41,7 @@ export async function registerHandler(req: Request, res: Response) {
       refreshToken: result.refreshToken,
     });
   } catch (error: any) {
-    console.error("Registration error:", error);
+    logger.error("Registration error:", { error: error.message, stack: error.stack });
     res.status(400).json({
       success: false,
       error: error.message || "ההרשמה נכשלה",
@@ -64,7 +65,7 @@ export async function loginHandler(req: Request, res: Response) {
       refreshToken: result.refreshToken,
     });
   } catch (error: any) {
-    console.error("Login error:", error);
+    logger.error("Login error:", { error: error.message, stack: error.stack });
     res.status(401).json({
       success: false,
       error: error.message || "ההתחברות נכשלה",
@@ -87,7 +88,7 @@ export async function refreshTokenHandler(req: Request, res: Response) {
       refreshToken: result.refreshToken,
     });
   } catch (error: any) {
-    console.error("Refresh token error:", error);
+    logger.error("Refresh token error:", { error: error.message, stack: error.stack });
     res.status(401).json({
       success: false,
       error: error.message || "רענון הטוקן נכשל",
@@ -118,7 +119,7 @@ export async function logoutHandler(req: Request, res: Response) {
       message: "התנתקת בהצלחה",
     });
   } catch (error: any) {
-    console.error("Logout error:", error);
+    logger.error("Logout error:", { error: error.message, stack: error.stack });
     res.status(400).json({
       success: false,
       error: error.message || "ההתנתקות נכשלה",
@@ -141,7 +142,7 @@ export async function verifyEmailHandler(req: Request, res: Response) {
       user: result.user,
     });
   } catch (error: any) {
-    console.error("Email verification error:", error);
+    logger.error("Email verification error:", { error: error.message, stack: error.stack });
     res.status(400).json({
       success: false,
       error: error.message || "אימות האימייל נכשל",
@@ -163,7 +164,7 @@ export async function forgotPasswordHandler(req: Request, res: Response) {
       message: "אם האימייל קיים במערכת, נשלח אליו קישור לאיפוס סיסמה",
     });
   } catch (error: any) {
-    console.error("Forgot password error:", error);
+    logger.warn("Forgot password error:", { error: error.message });
     // Always return success to prevent email enumeration
     res.json({
       success: true,
@@ -186,7 +187,7 @@ export async function resetPasswordHandler(req: Request, res: Response) {
       message: "הסיסמה אופסה בהצלחה! כעת תוכל להתחבר עם הסיסמה החדשה.",
     });
   } catch (error: any) {
-    console.error("Reset password error:", error);
+    logger.error("Reset password error:", { error: error.message, stack: error.stack });
     res.status(400).json({
       success: false,
       error: error.message || "איפוס הסיסמה נכשל",
@@ -208,7 +209,7 @@ export async function getCurrentUserHandler(req: Request, res: Response) {
       user: userData,
     });
   } catch (error: any) {
-    console.error("Get current user error:", error);
+    logger.error("Get current user error:", { error: error.message, stack: error.stack });
     res.status(404).json({
       success: false,
       error: error.message || "המשתמש לא נמצא",

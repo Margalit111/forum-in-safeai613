@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { createUser, listUsers, getUserById, updateUser, deleteUser } from "../services/userService";
+import logger from "../logger";
 
 export async function createUserHandler(req: Request, res: Response) {
   try {
@@ -87,7 +88,7 @@ export async function updateOwnProfileHandler(req: Request<{ id: string }>, res:
 
     res.json(user);
   } catch (err) {
-    console.error("Error updating profile:", err);
+    logger.error("Error updating profile:", { error: err instanceof Error ? err.message : String(err), stack: err instanceof Error ? err.stack : undefined });
     res.status(500).json({ error: "Failed to update profile" });
   }
 }

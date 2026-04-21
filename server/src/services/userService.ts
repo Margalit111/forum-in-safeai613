@@ -3,6 +3,7 @@ import axios from "axios";
 
 import { encryptSecret, generateApiKey, getKeyPrefix, hashApiKey } from "../utils/crypto";
 import { duration } from "zod/v4/classic/iso.cjs";
+import logger from "../logger";
 
 export async function createUser(data: any) {
   // 1. הכנת המפתחות (לפני הנגיעה ב-DB)
