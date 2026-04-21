@@ -24,7 +24,9 @@
     "strict": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "moduleDetection": "force"  },
+    "moduleDetection": "force"  ,
+  },
+
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
