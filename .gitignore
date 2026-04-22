@@ -100,3 +100,5 @@ src/**/*.d.ts.map
 
 
 docs/production/*
+
+server/litellm_config.yaml
