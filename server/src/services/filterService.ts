@@ -127,6 +127,8 @@ export async function evaluateText(
     (profile.blockedCategories ?? []).join(", ");
 
   logger.info("profileDesc: " + profileDesc);
+
+  
   const isSafeByLLM = await getLLMDecision(text, profile.name, profileDesc);
 
   if (isSafeByLLM) {
