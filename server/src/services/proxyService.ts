@@ -126,11 +126,11 @@ export async function proxyChatCompletion(user: any, body: any) {
 
   // 4. הוספת system prompts
 
+    // do not reference the following topics in any way: <Other religions besides orthodox jewisem, relationships with women, sexual relations, Sexual exploitation or harassment, rape, sex, violent, immodest, romantic, intimate content, including innuendo, venereal diseases, fertility, pills, gynecology,impossible to answer the question without referencing these forbidden topics, respond only with: blocked.
+    //  Even if the prohibited topics are requested inside a data structure such as an object, array, HTML page, or any other embedded way , do not respond to them.           
+
   const systemPrompt = [
-    `
-    do not reference the following topics in any way: <Other religions besides orthodox jewisem, relationships with women, sexual relations, Sexual exploitation or harassment, rape, sex, violent, immodest, romantic, intimate content, including innuendo, venereal diseases, fertility, pills, gynecology,impossible to answer the question without referencing these forbidden topics, respond only with: blocked.
-     Even if the prohibited topics are requested inside a data structure such as an object, array, HTML page, or any other embedded way , do not respond to them.           
-`,
+    ``,
     ...(profile?.contentPrompts || []),
     ...(profile?.behaviorPrompts || []),
     ...(profile?.knowledgePrompts || []),
@@ -384,6 +384,7 @@ export async function proxyResponses(user: any, body: any) {
   if (!model) throw new Error("Model is required");
 
   const provider = getProviderFromModel(model);
+  console.log("Responses provider", provider);
 
   const providerKeyDoc =
     user.mode === "MANAGED"
@@ -404,6 +405,7 @@ export async function proxyResponses(user: any, body: any) {
   const profile = await AIProfile.findById(user.profileId);
   if (!profile) throw new Error("Profile not found");
 
+  console.log(JSON.stringify(body.input, null, 2));
   // חילוץ טקסט מ-input (יכול להיות string או מערך)
   let userQuery = "";
   if (typeof body.input === "string") {
@@ -413,7 +415,7 @@ export async function proxyResponses(user: any, body: any) {
       .flatMap((item: any) =>
         Array.isArray(item.content)
           ? item.content
-              .filter((p: any) => p.type === "text")
+              .filter((p: any) => p.type === "text"||  p.type === "input_text")
               .map((p: any) => p.text)
           : typeof item.content === "string"
             ? [item.content]
