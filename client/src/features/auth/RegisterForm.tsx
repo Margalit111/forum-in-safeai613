@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiCall, API_ENDPOINTS } from "../../config/api";
 
@@ -7,9 +7,16 @@ interface RegisterFormData {
   password: string;
   confirmPassword: string;
   name: string;
-  organization?: string;
+  organizationId: string;
   profileId?: string;
   mode: "BYOK" | "MANAGED";
+}
+
+interface Organization {
+  _id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
 }
 
 interface User {
@@ -27,17 +34,34 @@ export default function RegisterForm() {
     password: "",
     confirmPassword: "",
     name: "",
-    organization: "",
+    organizationId: "6a00e26b1e9d916a4da16fd7", // Default to SafeAI organization
     profileId: "",
     mode: "BYOK",
   });
+  const [organizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  // Don't fetch profiles during registration - user is not authenticated yet
-  // Profiles can be assigned later after login
+  // Fetch organizations on component mount
+  useEffect(() => {
+    // const fetchOrganizations = async () => {
+    //   try {
+    //     const response = await apiCall<Organization[]>(
+    //       API_ENDPOINTS.organizations,
+    //       {
+    //         method: "GET",
+    //       }
+    //     );
+    //     setOrganizations(response.filter((org) => org.isActive));
+    //   } catch (err) {
+    //     console.error("Failed to fetch organizations:", err);
+    //     // Don't show error to user - organization selection is optional
+    //   }
+    // };
+    // fetchOrganizations();
+  }, []);
 
   const validatePassword = (password: string): string[] => {
     const errors: string[] = [];
@@ -83,32 +107,26 @@ export default function RegisterForm() {
         message: string;
         user: User;
         proxyApiKey: string;
-        accessToken: string;
-        refreshToken: string;
       }>(API_ENDPOINTS.auth.register, {
         method: "POST",
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
           name: formData.name,
-          organization: formData.organization || undefined,
+          organizationId: formData.organizationId || undefined,
           profileId: formData.profileId || undefined,
           mode: formData.mode,
         }),
       });
 
       if (response.success) {
-        // Store tokens and user info
-        localStorage.setItem("accessToken", response.accessToken);
-        localStorage.setItem("refreshToken", response.refreshToken);
-        localStorage.setItem("user", JSON.stringify(response.user));
-        localStorage.setItem("userRole", response.user.role);
-
-        // Navigate to Profile Choose and API key display page
+        // Don't store tokens - user must verify email first
+        // Navigate to success page with API key and verification message
         navigate("/register-success", {
           state: {
             proxyApiKey: response.proxyApiKey,
             message: response.message,
+            email: formData.email,
           },
         });
       }
@@ -210,15 +228,25 @@ export default function RegisterForm() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="organization">ארגון (אופציונלי)</label>
-            <input
-              type="text"
-              id="organization"
-              name="organization"
-              value={formData.organization}
+            <label htmlFor="organizationId">ארגון *</label>
+            <select
+              id="organizationId"
+              name="organizationId"
+              value={formData.organizationId}
               onChange={handleChange}
-              placeholder="שם הארגון"
-            />
+              required
+            >
+                <option value="6a00e26b1e9d916a4da16fd7">SafeAI</option>
+
+              {organizations.map((org) => (
+                <option key={org._id} value={org._id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+            <small style={{ display: "block", marginTop: "5px", color: "#666" }}>
+              בחר את הארגון שאליו אתה משתייך
+            </small>
           </div>
 
           <div className="form-group">

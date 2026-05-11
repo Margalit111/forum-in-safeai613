@@ -5,10 +5,15 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: String,
-    organization: String,
+    organization: String, // Deprecated - kept for backward compatibility
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: false, // Not required initially to support existing users
+    },
     role: {
       type: String,
-      enum: ["admin", "user"],
+      enum: ["admin", "user", "org_owner"],
       default: "user",
     },
     

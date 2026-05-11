@@ -35,11 +35,15 @@ const createTransporter = () => {
 /**
  * Send verification email
  */
-export async function sendVerificationEmail(email: string, token: string, name?: string) {
+export async function sendVerificationEmail(
+  email: string,
+  token: string,
+  name?: string,
+) {
   const verificationUrl = `${FRONTEND_URL}/verify-email/${token}`;
-  
+
   const transporter = createTransporter();
-  
+
   const mailOptions = {
     from: EMAIL_FROM,
     to: email,
@@ -101,17 +105,29 @@ ${verificationUrl}
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    
+
+logger.info("Email sent", {
+  messageId: info.messageId,
+  accepted: info.accepted,
+  rejected: info.rejected,
+  response: info.response,
+  envelope: info.envelope,
+});
+
+
     if (process.env.NODE_ENV !== "production") {
       logger.debug("📧 Verification Email (DEV MODE):");
       logger.info("To:", email);
       logger.info("Verification URL:", verificationUrl);
       logger.debug("---");
     }
-    
+
     return info;
   } catch (error) {
-    logger.error("Failed to send verification email:", { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+    logger.error("Failed to send verification email:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     throw new Error("Failed to send verification email");
   }
 }
@@ -119,11 +135,15 @@ ${verificationUrl}
 /**
  * Send password reset email
  */
-export async function sendPasswordResetEmail(email: string, token: string, name?: string) {
+export async function sendPasswordResetEmail(
+  email: string,
+  token: string,
+  name?: string,
+) {
   const resetUrl = `${FRONTEND_URL}/reset-password/${token}`;
-  
+
   const transporter = createTransporter();
-  
+
   const mailOptions = {
     from: EMAIL_FROM,
     to: email,
@@ -193,17 +213,20 @@ ${resetUrl}
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    
+
     if (process.env.NODE_ENV !== "production") {
       logger.debug("📧 Password Reset Email (DEV MODE):");
       logger.info("To:", email);
       logger.info("Reset URL:", resetUrl);
       logger.debug("---");
     }
-    
+
     return info;
   } catch (error) {
-    logger.error("Failed to send password reset email:", { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+    logger.error("Failed to send password reset email:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     throw new Error("Failed to send password reset email");
   }
 }
@@ -211,9 +234,13 @@ ${resetUrl}
 /**
  * Send welcome email after verification
  */
-export async function sendWelcomeEmail(email: string, name: string, proxyApiKey: string) {
+export async function sendWelcomeEmail(
+  email: string,
+  name: string,
+  proxyApiKey: string,
+) {
   const transporter = createTransporter();
-  
+
   const mailOptions = {
     from: EMAIL_FROM,
     to: email,
@@ -258,7 +285,115 @@ export async function sendWelcomeEmail(email: string, name: string, proxyApiKey:
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    logger.error("Failed to send welcome email:", { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+    logger.error("Failed to send welcome email:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     // Don't throw - welcome email is not critical
+  }
+}
+
+/**
+ * Send contact form email to support
+ */
+export async function sendContactEmail(data: {
+  userEmail: string;
+  userName: string;
+  title: string;
+  description: string;
+}) {
+  const supportEmail = "support@safeai613.com";
+  const transporter = createTransporter();
+
+  const mailOptions = {
+    from: EMAIL_FROM,
+    to: supportEmail,
+    replyTo: data.userEmail,
+    subject: `צור קשר: ${data.title}`,
+    html: `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="he">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #10a37f 0%, #0d8f6f 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+          .info-box { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-right: 4px solid #10a37f; }
+          .label { font-weight: 600; color: #10a37f; margin-bottom: 5px; }
+          .value { color: #374151; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>📬 הודעה חדשה מטופס צור קשר</h1>
+          </div>
+          <div class="content">
+            <div class="info-box">
+              <div class="label">שם המשתמש:</div>
+              <div class="value">${data.userName}</div>
+            </div>
+            <div class="info-box">
+              <div class="label">אימייל:</div>
+              <div class="value">${data.userEmail}</div>
+            </div>
+            <div class="info-box">
+              <div class="label">כותרת:</div>
+              <div class="value">${data.title}</div>
+            </div>
+            <div class="info-box">
+              <div class="label">תיאור:</div>
+              <div class="value" style="white-space: pre-wrap;">${data.description}</div>
+            </div>
+          </div>
+          <div class="footer">
+            <p>© 2026 SafeAI. כל הזכויות שמורות.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+הודעה חדשה מטופס צור קשר
+
+שם המשתמש: ${data.userName}
+אימייל: ${data.userEmail}
+כותרת: ${data.title}
+
+תיאור:
+${data.description}
+
+---
+© 2026 SafeAI
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+
+    logger.info("Contact email sent", {
+      messageId: info.messageId,
+      to: supportEmail,
+      from: data.userEmail,
+    });
+
+    if (process.env.NODE_ENV !== "production") {
+      logger.debug("📧 Contact Email (DEV MODE):");
+      logger.info("From:", data.userEmail);
+      logger.info("To:", supportEmail);
+      logger.info("Title:", data.title);
+      logger.debug("---");
+    }
+
+    return info;
+  } catch (error) {
+    logger.error("Failed to send contact email:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw new Error("Failed to send contact email");
   }
 }

@@ -74,3 +74,21 @@ export function requireActiveUser(
 
   next();
 }
+
+/**
+ * Middleware to require organization owner role
+ * Must be used after authenticateToken
+ */
+export function requireOrgOwner(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const user = (req as any).user;
+
+  if (!user || (user.role !== "org_owner" && user.role !== "admin")) {
+    return res.status(403).json({ error: "Organization owner access required" });
+  }
+
+  next();
+}

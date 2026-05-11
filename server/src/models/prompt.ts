@@ -7,26 +7,34 @@
 import mongoose from "mongoose";
 
 export interface PromptDoc extends mongoose.Document {
-  code?: string;
+  code: string;
   category?: string;
-  content?: string;
+  content: string;
   description?: string;
-  status?: "לבדיקה" | "בשימוש" | "ישן";
+  status: "pending" | "active" | "deprecated";
+  isActive: boolean;
+  order?: number;
 }
 
 const PromptSchema = new mongoose.Schema(
   {
-    code: String,
-    category: String,
-    content: String,
-    description: String,
-    status: { type: String, enum: ["לבדיקה", "בשימוש", "ישן"] },
+    code: { type: String, required: true, unique: true, trim: true },
+    category: { type: String, trim: true },
+    content: { type: String, required: true },
+    description: { type: String },
+    status: { 
+      type: String, 
+      enum: ["pending", "active", "deprecated"],
+      default: "active"
+    },
+    isActive: { type: Boolean, default: true },
+    order: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
 
-
-PromptSchema.index({ code: 1 });
 PromptSchema.index({ category: 1 });
+PromptSchema.index({ isActive: 1, status: 1 });
+PromptSchema.index({ order: 1 });
 
 export const Prompt = mongoose.model<PromptDoc>("Prompt", PromptSchema);

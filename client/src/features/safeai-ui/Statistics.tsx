@@ -6,6 +6,7 @@ interface StatisticsProps {
     email: string;
     name: string;
     _id?: string;
+    role?: string;
   } | null;
 }
 
@@ -13,6 +14,16 @@ interface UsageData {
   date: string;
   requests: number;
   blocked: number;
+  tokens?: number;
+  cost?: number;
+}
+
+interface DailyUsageResponse {
+  _id: string;
+  requests: number;
+  tokens: number;
+  cost: number;
+  avgResponseTime?: number;
 }
 
 interface AdminStats {
@@ -35,35 +46,82 @@ export default function Statistics({ user }: StatisticsProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAdminStatistics = async () => {
+    const fetchStatistics = async () => {
       setLoading(true);
       setError(null);
       
       try {
         const accessToken = localStorage.getItem("accessToken");
+        const userRole = localStorage.getItem("userRole");
         const days = timeRange === "week" ? 7 : timeRange === "month" ? 30 : 365;
         
-        // Fetch admin stats and daily breakdown
-        const [statsRes, dailyRes] = await Promise.all([
-          fetch(`${API_ENDPOINTS.adminStats.stats}?days=${days}`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }),
-          fetch(`${API_ENDPOINTS.adminStats.daily}?days=${days}`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }),
-        ]);
+        // Check if user is admin (org_owner is temporarily treated as admin until they re-login)
+        const isAdmin = userRole === "admin" || user?.role === "admin";
+        
+        if (isAdmin) {
+          // Fetch admin stats and daily breakdown
+          const [statsRes, dailyRes] = await Promise.all([
+            fetch(`${API_ENDPOINTS.adminStats.stats}?days=${days}`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }),
+            fetch(`${API_ENDPOINTS.adminStats.daily}?days=${days}`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }),
+          ]);
 
-        if (!statsRes.ok || !dailyRes.ok) {
-          throw new Error("Failed to fetch statistics");
+          if (!statsRes.ok || !dailyRes.ok) {
+            throw new Error("Failed to fetch statistics");
+          }
+
+          const stats = await statsRes.json();
+          const daily = await dailyRes.json();
+
+          setAdminStats(stats);
+          setUsageData(daily);
+        } else {
+          // Fetch user-specific stats
+          const [statsRes, dailyRes] = await Promise.all([
+            fetch(`${API_ENDPOINTS.usage.stats}?days=${days}`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }),
+            fetch(`${API_ENDPOINTS.usage.daily}?days=${days}`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }),
+          ]);
+
+          if (!statsRes.ok || !dailyRes.ok) {
+            throw new Error("Failed to fetch statistics");
+          }
+
+          const stats = await statsRes.json();
+          const daily = await dailyRes.json();
+
+          // Transform user stats to match admin stats format
+          setAdminStats({
+            totalRequests: stats.totalRequests || 0,
+            successfulRequests: stats.successfulRequests || 0,
+            failedRequests: stats.failedRequests || 0,
+            blockedRequests: 0, // User stats don't have blocked count
+            totalTokens: stats.totalTokens || 0,
+            totalCost: stats.totalCost || 0,
+            avgResponseTime: stats.avgResponseTime || 0,
+            totalUsers: 1, // Only the current user
+            activeUsers: 1,
+          });
+
+          // Transform daily data to match expected format
+          const transformedDaily = daily.map((day: DailyUsageResponse) => ({
+            date: day._id,
+            requests: day.requests || 0,
+            blocked: 0, // User stats don't track blocked requests
+            tokens: day.tokens || 0,
+            cost: day.cost || 0,
+          }));
+
+          setUsageData(transformedDaily);
         }
-
-        const stats = await statsRes.json();
-        const daily = await dailyRes.json();
-
-        setAdminStats(stats);
-        setUsageData(daily);
       } catch (err) {
-        console.error("Error fetching admin statistics:", err);
+        console.error("Error fetching statistics:", err);
         setError("שגיאה בטעינת הסטטיסטיקות");
       } finally {
         setLoading(false);
@@ -71,7 +129,7 @@ export default function Statistics({ user }: StatisticsProps) {
     };
 
     if (user) {
-      fetchAdminStatistics();
+      fetchStatistics();
     }
   }, [timeRange, user]);
 
@@ -95,7 +153,7 @@ export default function Statistics({ user }: StatisticsProps) {
   return (
     <div>
       <div className="management-header">
-        <h2>סטטיסטיקות מערכת - מנהל</h2>
+        <h2>{localStorage.getItem("userRole") === "admin" ? "סטטיסטיקות מערכת - מנהל" : "סטטיסטיקות שימוש"}</h2>
         <div style={{ display: "flex", gap: "8px" }}>
           <button
             className={timeRange === "week" ? "btn btn-primary" : "btn btn-secondary"}
@@ -133,23 +191,27 @@ export default function Statistics({ user }: StatisticsProps) {
             <h3>בקשות מוצלחות</h3>
             <p className="stat-value">{adminStats.successfulRequests}</p>
             <p className="stat-change positive">
-              {((adminStats.successfulRequests / adminStats.totalRequests) * 100).toFixed(1)}% הצלחה
+              {adminStats.totalRequests > 0 ? ((adminStats.successfulRequests / adminStats.totalRequests) * 100).toFixed(1) : "0"}% הצלחה
             </p>
           </div>
 
-          <div className="stat-card">
-            <h3>בקשות חסומות</h3>
-            <p className="stat-value">{adminStats.blockedRequests}</p>
-            <p className="stat-change negative">
-              {((adminStats.blockedRequests / adminStats.totalRequests) * 100).toFixed(1)}% חסימה
-            </p>
-          </div>
+          {localStorage.getItem("userRole") === "admin" && (
+            <>
+              <div className="stat-card">
+                <h3>בקשות חסומות</h3>
+                <p className="stat-value">{adminStats.blockedRequests}</p>
+                <p className="stat-change negative">
+                  {adminStats.totalRequests > 0 ? ((adminStats.blockedRequests / adminStats.totalRequests) * 100).toFixed(1) : "0"}% חסימה
+                </p>
+              </div>
 
-          <div className="stat-card">
-            <h3>משתמשים פעילים</h3>
-            <p className="stat-value">{adminStats.activeUsers}</p>
-            <p className="stat-change">מתוך {adminStats.totalUsers} סה"כ</p>
-          </div>
+              <div className="stat-card">
+                <h3>משתמשים פעילים</h3>
+                <p className="stat-value">{adminStats.activeUsers}</p>
+                <p className="stat-change">מתוך {adminStats.totalUsers} סה"כ</p>
+              </div>
+            </>
+          )}
 
           <div className="stat-card">
             <h3>סה"כ Tokens</h3>
@@ -215,7 +277,7 @@ export default function Statistics({ user }: StatisticsProps) {
         </div>
       </div>
 
-      {adminStats && (
+      {adminStats && localStorage.getItem("userRole") === "admin" && (
         <div className="card" style={{ marginTop: "24px" }}>
           <h3>תובנות מערכת</h3>
           <div style={{ marginTop: "16px" }}>
@@ -224,7 +286,7 @@ export default function Statistics({ user }: StatisticsProps) {
               <ul style={{ marginTop: "8px", marginBottom: "0", paddingRight: "20px" }}>
                 <li>הממוצע היומי במערכת: {avgRequestsPerDay.toFixed(0)} בקשות</li>
                 <li>שיעור החסימה במערכת: {blockRate}%</li>
-                <li>משתמשים פעילים: {adminStats.activeUsers} מתוך {adminStats.totalUsers} ({((adminStats.activeUsers / adminStats.totalUsers) * 100).toFixed(1)}%)</li>
+                <li>משתמשים פעילים: {adminStats.activeUsers} מתוך {adminStats.totalUsers} ({adminStats.totalUsers > 0 ? ((adminStats.activeUsers / adminStats.totalUsers) * 100).toFixed(1) : "0"}%)</li>
                 <li>
                   {parseFloat(blockRate) < 10
                     ? "שיעור חסימה נמוך - המערכת פועלת כראוי! ✅"

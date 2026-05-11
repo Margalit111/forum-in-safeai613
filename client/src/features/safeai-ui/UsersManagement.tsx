@@ -7,17 +7,38 @@ interface User {
   email: string;
   name?: string;
   profileId?: string;
+  organizationId?: string;
   mode: "BYOK" | "MANAGED";
   isActive: boolean;
   proxyKeyPrefix: string;
   litellmPrefix: string;
   createdAt?: string;
   updatedAt?: string;
+  costLimits?: {
+    monthlyBudget: number;
+    currentMonthSpent: number;
+    lastResetDate: string;
+  };
 }
 
 interface Profile {
   _id: string;
   name: string;
+}
+
+interface Organization {
+  _id: string;
+  name: string;
+  description?: string;
+  ownerId: string;
+  isActive: boolean;
+}
+
+interface OrganizationStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalCost: number;
+  averageCostPerUser: number;
 }
 
 interface CreateUserResponse {
@@ -29,6 +50,7 @@ interface CreateUserResponse {
 export default function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -40,7 +62,9 @@ export default function UsersManagement() {
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
   const [filterMode, setFilterMode] = useState<"all" | "BYOK" | "MANAGED">("all");
   const [filterProfile, setFilterProfile] = useState<string>("all");
+  const [filterOrganization, setFilterOrganization] = useState<string>("all");
   const [managingKeysUser, setManagingKeysUser] = useState<User | null>(null);
+  const [organizationStats, setOrganizationStats] = useState<OrganizationStats | null>(null);
   
   const [createFormData, setCreateFormData] = useState({
     email: "",
@@ -53,6 +77,7 @@ export default function UsersManagement() {
   const [editFormData, setEditFormData] = useState({
     name: "",
     profileId: "",
+    organizationId: "",
     mode: "MANAGED" as "BYOK" | "MANAGED",
     isActive: true,
   });
@@ -60,7 +85,16 @@ export default function UsersManagement() {
   useEffect(() => {
     fetchUsers();
     fetchProfiles();
+    fetchOrganizations();
   }, []);
+
+  useEffect(() => {
+    if (filterOrganization && filterOrganization !== "all" && filterOrganization !== "none") {
+      calculateOrganizationStats(filterOrganization);
+    } else {
+      setOrganizationStats(null);
+    }
+  }, [filterOrganization, users]);
 
   const fetchUsers = async () => {
     try {
@@ -81,6 +115,31 @@ export default function UsersManagement() {
     } catch (error) {
       console.error("Failed to fetch profiles:", error);
     }
+  };
+
+  const fetchOrganizations = async () => {
+    try {
+      const data = await apiCall<Organization[]>(API_ENDPOINTS.organizations);
+      setOrganizations(data);
+    } catch (error) {
+      console.error("Failed to fetch organizations:", error);
+    }
+  };
+
+  const calculateOrganizationStats = (orgId: string) => {
+    const orgUsers = users.filter(u => u.organizationId === orgId);
+    const activeUsers = orgUsers.filter(u => u.isActive).length;
+    const totalCost = orgUsers.reduce((sum, user) => {
+      return sum + (user.costLimits?.currentMonthSpent || 0);
+    }, 0);
+    const averageCostPerUser = orgUsers.length > 0 ? totalCost / orgUsers.length : 0;
+
+    setOrganizationStats({
+      totalUsers: orgUsers.length,
+      activeUsers,
+      totalCost,
+      averageCostPerUser,
+    });
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -125,6 +184,7 @@ export default function UsersManagement() {
         body: JSON.stringify({
           name: editFormData.name || undefined,
           profileId: editFormData.profileId || undefined,
+          organizationId: editFormData.organizationId || undefined,
           mode: editFormData.mode,
           isActive: editFormData.isActive,
         }),
@@ -167,6 +227,7 @@ export default function UsersManagement() {
     setEditFormData({
       name: user.name || "",
       profileId: user.profileId || "",
+      organizationId: user.organizationId || "",
       mode: user.mode,
       isActive: user.isActive,
     });
@@ -189,6 +250,17 @@ export default function UsersManagement() {
     return profile ? profile.name : "פרופיל לא נמצא";
   };
 
+  const getOrganizationName = (organizationId?: string) => {
+    if (!organizationId) return "ללא ארגון";
+    const org = organizations.find((o) => o._id === organizationId);
+    return org ? org.name : "ארגון לא נמצא";
+  };
+  const getOrganizationDescription = (organizationId?: string) => {
+    if (!organizationId) return "ללא ארגון";
+    const org = organizations.find((o) => o._id === organizationId);
+    return org ? org.description : "ארגון לא נמצא";
+  };
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -207,7 +279,12 @@ export default function UsersManagement() {
       (filterProfile === "none" && !user.profileId) ||
       user.profileId === filterProfile;
 
-    return matchesSearch && matchesStatus && matchesMode && matchesProfile;
+    const matchesOrganization =
+      filterOrganization === "all" ||
+      (filterOrganization === "none" && !user.organizationId) ||
+      user.organizationId === filterOrganization;
+
+    return matchesSearch && matchesStatus && matchesMode && matchesProfile && matchesOrganization;
   });
 
   if (loading) {
@@ -279,7 +356,88 @@ export default function UsersManagement() {
             ))}
           </select>
         </div>
+
+        <div>
+          <label style={{ marginLeft: "8px", fontWeight: "bold" }}>ארגון:</label>
+          <select
+            value={filterOrganization}
+            onChange={(e) => setFilterOrganization(e.target.value)}
+            style={{ padding: "5px 10px", borderRadius: "4px", border: "1px solid #ddd" }}
+          >
+            <option value="all">הכל</option>
+            <option value="none">ללא ארגון</option>
+            {organizations.map((org) => (
+              <option key={org._id} value={org._id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {/* Organization Statistics */}
+      {organizationStats && filterOrganization !== "all" && filterOrganization !== "none" && (
+        <div style={{ 
+          backgroundColor: "#f8f9fa", 
+          border: "1px solid #dee2e6", 
+          borderRadius: "8px", 
+          padding: "20px", 
+          marginBottom: "20px" 
+        }}>
+          <h3 style={{ marginTop: 0, marginBottom: "15px", color: "#495057" }}>
+            📊 סטטיסטיקות ארגון: {getOrganizationName(filterOrganization)}
+          </h3>
+          <p>
+            {getOrganizationDescription(filterOrganization)}
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
+            <div style={{ 
+              backgroundColor: "white", 
+              padding: "15px", 
+              borderRadius: "6px", 
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)" 
+            }}>
+              <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "5px" }}>סה"כ משתמשים</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#007bff" }}>
+                {organizationStats.totalUsers}
+              </div>
+            </div>
+            <div style={{ 
+              backgroundColor: "white", 
+              padding: "15px", 
+              borderRadius: "6px", 
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)" 
+            }}>
+              <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "5px" }}>משתמשים פעילים</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#28a745" }}>
+                {organizationStats.activeUsers}
+              </div>
+            </div>
+            <div style={{ 
+              backgroundColor: "white", 
+              padding: "15px", 
+              borderRadius: "6px", 
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)" 
+            }}>
+              <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "5px" }}>סה"כ עלות חודשית</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#dc3545" }}>
+                ${organizationStats.totalCost.toFixed(2)}
+              </div>
+            </div>
+            <div style={{ 
+              backgroundColor: "white", 
+              padding: "15px", 
+              borderRadius: "6px", 
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)" 
+            }}>
+              <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "5px" }}>ממוצע למשתמש</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#ffc107" }}>
+                ${organizationStats.averageCostPerUser.toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {filteredUsers.length === 0 ? (
         <div className="empty-state">
@@ -326,6 +484,14 @@ export default function UsersManagement() {
                   </span>
                 </div>
                 <div className="item-detail">
+                  <span className="item-detail-label">ארגון:</span>
+                  <span className="item-detail-value">
+                    <span className={user.organizationId ? "badge badge-info" : "badge badge-secondary"}>
+                      {getOrganizationName(user.organizationId)}
+                    </span>
+                  </span>
+                </div>
+                <div className="item-detail">
                   <span className="item-detail-label">מצב:</span>
                   <span className="item-detail-value">
                     <span className={user.mode === "BYOK" ? "badge badge-info" : "badge badge-warning"}>
@@ -341,6 +507,14 @@ export default function UsersManagement() {
                   <span className="item-detail-label">LiteLLM Prefix:</span>
                   <span className="item-detail-value">{user.litellmPrefix}</span>
                 </div>
+                {user.costLimits && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">עלות חודשית:</span>
+                    <span className="item-detail-value">
+                      ${user.costLimits.currentMonthSpent.toFixed(2)} / ${user.costLimits.monthlyBudget.toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 {user.createdAt && (
                   <div className="item-detail">
                     <span className="item-detail-label">נוצר בתאריך:</span>
@@ -511,6 +685,21 @@ export default function UsersManagement() {
                   {profiles.map((profile) => (
                     <option key={profile._id} value={profile._id}>
                       {profile.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>ארגון</label>
+                <select
+                  value={editFormData.organizationId}
+                  onChange={(e) => setEditFormData({ ...editFormData, organizationId: e.target.value })}
+                >
+                  <option value="">ללא ארגון</option>
+                  {organizations.map((org) => (
+                    <option key={org._id} value={org._id}>
+                      {org.name}
                     </option>
                   ))}
                 </select>
