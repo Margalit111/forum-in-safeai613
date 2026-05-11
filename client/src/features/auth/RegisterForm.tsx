@@ -46,20 +46,20 @@ export default function RegisterForm() {
 
   // Fetch organizations on component mount
   useEffect(() => {
-    const fetchOrganizations = async () => {
-      try {
-        const response = await apiCall<Organization[]>(
-          API_ENDPOINTS.organizations,
-          {
-            method: "GET",
-          }
-        );
-        setOrganizations(response.filter((org) => org.isActive));
-      } catch (err) {
-        console.error("Failed to fetch organizations:", err);
-        // Don't show error to user - organization selection is optional
-      }
-    };
+    // const fetchOrganizations = async () => {
+    //   try {
+    //     const response = await apiCall<Organization[]>(
+    //       API_ENDPOINTS.organizations,
+    //       {
+    //         method: "GET",
+    //       }
+    //     );
+    //     setOrganizations(response.filter((org) => org.isActive));
+    //   } catch (err) {
+    //     console.error("Failed to fetch organizations:", err);
+    //     // Don't show error to user - organization selection is optional
+    //   }
+    // };
     // fetchOrganizations();
   }, []);
 

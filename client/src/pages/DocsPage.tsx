@@ -21,206 +21,206 @@ interface RecommendedGuide {
 }
 
 // Data from the Excel spreadsheet
-const guideCards: GuideCard[] = [
-  {
-    id: "1",
-    title: "מדריך התחלה מהירה",
-    description: "למד את היסודות של SafeAI ותתחיל לעבוד תוך דקות",
-    link: "https://drive.google.com/file/d/example1",
-    category: "התחלה",
-  },
-  {
-    id: "2",
-    title: "ניהול משתמשים",
-    description: "כיצד להוסיף, לערוך ולנהל משתמשים במערכת",
-    link: "https://drive.google.com/file/d/example2",
-    category: "ניהול",
-  },
-  {
-    id: "3",
-    title: "הגדרות מתקדמות",
-    description: "עבודה עם מפתחות מנוהלים אישית",
-    link: "https://drive.google.com/file/d/example3",
-    category: "מתקדם",
-  },
-  {
-    id: "6",
-    title: "הגדרות מתקדמות",
-    description: "אינטגרציה עם מערכות חיצוניות",
-    link: "https://drive.google.com/file/d/example3",
-    category: "מתקדם",
-  },
-  {
-    id: "4",
-    title: "אבטחה ופרטיות",
-    description: "הבנת מדיניות האבטחה והפרטיות של SafeAI",
-    link: "https://drive.google.com/file/d/example4",
-    category: "אבטחה",
-  },
-  {
-    id: "5",
-    title: "שאלות נפוצות",
-    description: "תשובות לשאלות הנפוצות ביותר",
-    link: "https://drive.google.com/file/d/example5",
-    category: "תמיכה",
-  },
-];
+// const guideCards: GuideCard[] = [
+//   {
+//     id: "1",
+//     title: "מדריך התחלה מהירה",
+//     description: "למד את היסודות של SafeAI ותתחיל לעבוד תוך דקות",
+//     link: "https://drive.google.com/file/d/example1",
+//     category: "התחלה",
+//   },
+//   {
+//     id: "2",
+//     title: "ניהול משתמשים",
+//     description: "כיצד להוסיף, לערוך ולנהל משתמשים במערכת",
+//     link: "https://drive.google.com/file/d/example2",
+//     category: "ניהול",
+//   },
+//   {
+//     id: "3",
+//     title: "הגדרות מתקדמות",
+//     description: "עבודה עם מפתחות מנוהלים אישית",
+//     link: "https://drive.google.com/file/d/example3",
+//     category: "מתקדם",
+//   },
+//   {
+//     id: "6",
+//     title: "הגדרות מתקדמות",
+//     description: "אינטגרציה עם מערכות חיצוניות",
+//     link: "https://drive.google.com/file/d/example3",
+//     category: "מתקדם",
+//   },
+//   {
+//     id: "4",
+//     title: "אבטחה ופרטיות",
+//     description: "הבנת מדיניות האבטחה והפרטיות של SafeAI",
+//     link: "https://drive.google.com/file/d/example4",
+//     category: "אבטחה",
+//   },
+//   {
+//     id: "5",
+//     title: "שאלות נפוצות",
+//     description: "תשובות לשאלות הנפוצות ביותר",
+//     link: "https://drive.google.com/file/d/example5",
+//     category: "תמיכה",
+//   },
+// ];
 
 // Recommended guides for general learning - curated by Miriam Kaner
-const recommendedGuides: RecommendedGuide[] = [
-  {
-    id: "r1",
-    title: "פלטפורמת הלמידה של Hugging Face",
-    description:
-      "קורסים ומדריכים לבנייה ואימון של מודלי שפה ו-ML. כולל קורס Agents ועוד",
-    link: "https://huggingface.co/learn",
-    duration: "משתנה",
-    language: "אנגלית",
-    technologies: "Hugging Face, ML",
-    rating: "⭐⭐⭐⭐⭐",
-  },
-  {
-    id: "r2",
-    title: "בניית אייג'נטים מתקדמים עם LangGraph",
-    description:
-      "הדרכה מעולה בעברית על בניית אייג'נטים מתקדמים. כולל דוגמאות קוד מעשיות",
-    link: "https://www.youtube.com/watch?v=Uttm6avPYPY",
-    duration: "25 דקות",
-    language: "עברית",
-    technologies: "LangGraph",
-    rating: "⭐⭐⭐⭐⭐",
-  },
-  {
-    id: "r3",
-    title: "בניית Agent עם Google SDK",
-    description:
-      "מדריך מקיף לבניית Agent במהירות עם ה-SDK של Google. קליל, ברור ומקיף",
-    link: "https://www.youtube.com/watch?v=P4VFL9nIaIA",
-    duration: "3 שעות",
-    language: "אנגלית",
-    technologies: "Google SDK, Agents",
-    rating: "⭐⭐⭐⭐",
-  },
-  {
-    id: "r4",
-    title: "כתיבת סוכנים עם OpenAI SDK",
-    description:
-      "מדריך מקצועי לכתיבת סוכנים בעזרת קריאות ישירות מול ה-OpenAI SDK",
-    link: "https://www.youtube.com/watch?v=bZzyPscbtI8",
-    duration: "שעה",
-    language: "אנגלית",
-    technologies: "OpenAI SDK",
-    rating: "⭐⭐⭐⭐⭐",
-  },
-  {
-    id: "r5",
-    title: "ארכיטקטורה של בניית סוכנים - Anthropic",
-    description:
-      "המדריך הרשמי של Anthropic לתכנון נכון וארכיטקטורה של בניית סוכנים אפקטיביים",
-    link: "https://www.anthropic.com/engineering/building-effective-agents",
-    duration: "קריאה",
-    language: "אנגלית",
-    technologies: "Agent Architecture",
-    rating: "⭐⭐⭐⭐⭐",
-  },
-  {
-    id: "r6",
-    title: "מערכות RAG - הדרכה בעברית",
-    description:
-      "הדרכה מעמיקה ומעולה על הטמעת מערכות RAG לאחזור מידע מבוסס הקשר",
-    link: "https://www.youtube.com/watch?v=7oQg8kVVXRg",
-    duration: "13 דקות",
-    language: "עברית",
-    technologies: "RAG",
-    rating: "⭐⭐⭐⭐⭐",
-  },
-  {
-    id: "r7",
-    title: "קורס מקיף - RAG וסוכנים",
-    description: "קורס מלא וארוך להבנה ולפיתוח של מערכות RAG וסוכנים",
-    link: "https://www.youtube.com/watch?v=9c48sMot1gA",
-    duration: "8 שעות",
-    language: "אנגלית",
-    technologies: "RAG, Agents",
-    rating: "⭐⭐⭐⭐",
-  },
-  {
-    id: "r8",
-    title: "Context7 - כלי MCP",
-    description:
-      "פריימוורק שעוזר למודל השפה למשוך ולקרוא דוקומנטציה עדכנית לכל שפת תכנות",
-    link: "https://context7.com/",
-    duration: "כלי/אתר",
-    language: "אנגלית",
-    technologies: "MCP, LLM Context",
-    rating: "⭐⭐⭐⭐",
-  },
-  {
-    id: "r9",
-    title: "בניית אייג'נט והטמעת MCP - GeekAcademy",
-    description: "סרטון הדרכה בעברית המסביר על בניית אייג'נט והטמעת חיבורי MCP",
-    link: "https://www.youtube.com/watch?v=d0Bt3Z8Mucg",
-    duration: "שעתיים",
-    language: "עברית",
-    technologies: "Agents, MCP",
-    rating: "⭐⭐⭐⭐",
-  },
-  {
-    id: "r10",
-    title: "פיתוח כלי דמוי Claude Code",
-    description:
-      "הסרטה מקיפה מאד שמראה תהליך פיתוח מאפס של כלי דמוי Claude Code",
-    link: "https://www.youtube.com/watch?v=3GjE_YAs03s",
-    duration: "19 שעות",
-    language: "אנגלית",
-    technologies: "AI Development",
-    rating: "⭐⭐⭐⭐",
-  },
-  {
-    id: "r11",
-    title: "N8N - אוטומציה ותזמור Workflows",
-    description:
-      "מאמר המסביר על כלי האוטומציה N8N לאירוח ותזמור workflows של סוכנים",
-    link: "https://bizfly.co.il/blog/n8n-guide",
-    duration: "מאמר",
-    language: "עברית",
-    technologies: "N8N, Automation",
-    rating: "⭐⭐⭐⭐",
-  },
-  {
-    id: "r12",
-    title: "OpenAI Agent Builder",
-    description:
-      "הפלטפורמה הרשמית של OpenAI לבנייה ותצורה מהירה של סוכנים (GPTs)",
-    link: "https://platform.openai.com/agent-builder",
-    duration: "אתר",
-    language: "אנגלית",
-    technologies: "OpenAI",
-    rating: "⭐⭐⭐⭐⭐",
-  },
-  {
-    id: "r13",
-    title: "AI Cookbook - דוגמאות קוד",
-    description:
-      "מאגר קוד ב-Github עם דוגמאות קוד לתבניות עבודה של תזמור סוכנים",
-    link: "https://github.com/daveebbelaar/ai-cookbook",
-    duration: "קוד",
-    language: "אנגלית",
-    technologies: "Python, Agent Workflows",
-    rating: "⭐⭐⭐",
-  },
-  {
-    id: "r14",
-    title: "AWS Skill Builder - יסודות ענן",
-    description:
-      "קורס יסודות חינמי של סביבת הענן של AWS. היכרות עם התשתית עליה מריצים מודלי נתונים",
-    link: "https://skillbuilder.aws/",
-    duration: "קצר",
-    language: "עברית",
-    technologies: "AWS, Cloud",
-    rating: "⭐⭐⭐⭐",
-  },
-];
+// const recommendedGuides: RecommendedGuide[] = [
+//   {
+//     id: "r1",
+//     title: "פלטפורמת הלמידה של Hugging Face",
+//     description:
+//       "קורסים ומדריכים לבנייה ואימון של מודלי שפה ו-ML. כולל קורס Agents ועוד",
+//     link: "https://huggingface.co/learn",
+//     duration: "משתנה",
+//     language: "אנגלית",
+//     technologies: "Hugging Face, ML",
+//     rating: "⭐⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r2",
+//     title: "בניית אייג'נטים מתקדמים עם LangGraph",
+//     description:
+//       "הדרכה מעולה בעברית על בניית אייג'נטים מתקדמים. כולל דוגמאות קוד מעשיות",
+//     link: "https://www.youtube.com/watch?v=Uttm6avPYPY",
+//     duration: "25 דקות",
+//     language: "עברית",
+//     technologies: "LangGraph",
+//     rating: "⭐⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r3",
+//     title: "בניית Agent עם Google SDK",
+//     description:
+//       "מדריך מקיף לבניית Agent במהירות עם ה-SDK של Google. קליל, ברור ומקיף",
+//     link: "https://www.youtube.com/watch?v=P4VFL9nIaIA",
+//     duration: "3 שעות",
+//     language: "אנגלית",
+//     technologies: "Google SDK, Agents",
+//     rating: "⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r4",
+//     title: "כתיבת סוכנים עם OpenAI SDK",
+//     description:
+//       "מדריך מקצועי לכתיבת סוכנים בעזרת קריאות ישירות מול ה-OpenAI SDK",
+//     link: "https://www.youtube.com/watch?v=bZzyPscbtI8",
+//     duration: "שעה",
+//     language: "אנגלית",
+//     technologies: "OpenAI SDK",
+//     rating: "⭐⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r5",
+//     title: "ארכיטקטורה של בניית סוכנים - Anthropic",
+//     description:
+//       "המדריך הרשמי של Anthropic לתכנון נכון וארכיטקטורה של בניית סוכנים אפקטיביים",
+//     link: "https://www.anthropic.com/engineering/building-effective-agents",
+//     duration: "קריאה",
+//     language: "אנגלית",
+//     technologies: "Agent Architecture",
+//     rating: "⭐⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r6",
+//     title: "מערכות RAG - הדרכה בעברית",
+//     description:
+//       "הדרכה מעמיקה ומעולה על הטמעת מערכות RAG לאחזור מידע מבוסס הקשר",
+//     link: "https://www.youtube.com/watch?v=7oQg8kVVXRg",
+//     duration: "13 דקות",
+//     language: "עברית",
+//     technologies: "RAG",
+//     rating: "⭐⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r7",
+//     title: "קורס מקיף - RAG וסוכנים",
+//     description: "קורס מלא וארוך להבנה ולפיתוח של מערכות RAG וסוכנים",
+//     link: "https://www.youtube.com/watch?v=9c48sMot1gA",
+//     duration: "8 שעות",
+//     language: "אנגלית",
+//     technologies: "RAG, Agents",
+//     rating: "⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r8",
+//     title: "Context7 - כלי MCP",
+//     description:
+//       "פריימוורק שעוזר למודל השפה למשוך ולקרוא דוקומנטציה עדכנית לכל שפת תכנות",
+//     link: "https://context7.com/",
+//     duration: "כלי/אתר",
+//     language: "אנגלית",
+//     technologies: "MCP, LLM Context",
+//     rating: "⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r9",
+//     title: "בניית אייג'נט והטמעת MCP - GeekAcademy",
+//     description: "סרטון הדרכה בעברית המסביר על בניית אייג'נט והטמעת חיבורי MCP",
+//     link: "https://www.youtube.com/watch?v=d0Bt3Z8Mucg",
+//     duration: "שעתיים",
+//     language: "עברית",
+//     technologies: "Agents, MCP",
+//     rating: "⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r10",
+//     title: "פיתוח כלי דמוי Claude Code",
+//     description:
+//       "הסרטה מקיפה מאד שמראה תהליך פיתוח מאפס של כלי דמוי Claude Code",
+//     link: "https://www.youtube.com/watch?v=3GjE_YAs03s",
+//     duration: "19 שעות",
+//     language: "אנגלית",
+//     technologies: "AI Development",
+//     rating: "⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r11",
+//     title: "N8N - אוטומציה ותזמור Workflows",
+//     description:
+//       "מאמר המסביר על כלי האוטומציה N8N לאירוח ותזמור workflows של סוכנים",
+//     link: "https://bizfly.co.il/blog/n8n-guide",
+//     duration: "מאמר",
+//     language: "עברית",
+//     technologies: "N8N, Automation",
+//     rating: "⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r12",
+//     title: "OpenAI Agent Builder",
+//     description:
+//       "הפלטפורמה הרשמית של OpenAI לבנייה ותצורה מהירה של סוכנים (GPTs)",
+//     link: "https://platform.openai.com/agent-builder",
+//     duration: "אתר",
+//     language: "אנגלית",
+//     technologies: "OpenAI",
+//     rating: "⭐⭐⭐⭐⭐",
+//   },
+//   {
+//     id: "r13",
+//     title: "AI Cookbook - דוגמאות קוד",
+//     description:
+//       "מאגר קוד ב-Github עם דוגמאות קוד לתבניות עבודה של תזמור סוכנים",
+//     link: "https://github.com/daveebbelaar/ai-cookbook",
+//     duration: "קוד",
+//     language: "אנגלית",
+//     technologies: "Python, Agent Workflows",
+//     rating: "⭐⭐⭐",
+//   },
+//   {
+//     id: "r14",
+//     title: "AWS Skill Builder - יסודות ענן",
+//     description:
+//       "קורס יסודות חינמי של סביבת הענן של AWS. היכרות עם התשתית עליה מריצים מודלי נתונים",
+//     link: "https://skillbuilder.aws/",
+//     duration: "קצר",
+//     language: "עברית",
+//     technologies: "AWS, Cloud",
+//     rating: "⭐⭐⭐⭐",
+//   },
+// ];
 
 export default function DocsPage() {
   // const [searchQuery] = useState("");

@@ -61,22 +61,22 @@ export default function TopNavigation() {
     navigate("/");
   };
 
-  const scrollToSection = (sectionId: string) => {
-    if (location.pathname !== "/") {
-      navigate("/");
-      setTimeout(() => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 100);
-    } else {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  };
+  // const scrollToSection = (sectionId: string) => {
+  //   if (location.pathname !== "/") {
+  //     navigate("/");
+  //     setTimeout(() => {
+  //       const element = document.getElementById(sectionId);
+  //       if (element) {
+  //         element.scrollIntoView({ behavior: "smooth" });
+  //       }
+  //     }, 100);
+  //   } else {
+  //     const element = document.getElementById(sectionId);
+  //     if (element) {
+  //       element.scrollIntoView({ behavior: "smooth" });
+  //     }
+  //   }
+  // };
 
   return (
     <nav className="top-navigation">
