@@ -223,39 +223,39 @@ const recommendedGuides: RecommendedGuide[] = [
 ];
 
 export default function DocsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [recommendedSearchQuery, setRecommendedSearchQuery] = useState("");
+  // const [searchQuery] = useState("");
+  // const [recommendedSearchQuery] = useState("");
 
   // Filter cards based on search query
-  const filteredCards = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return guideCards;
-    }
+  // const filteredCards = useMemo(() => {
+  //   if (!searchQuery.trim()) {
+  //     return guideCards;
+  //   }
 
-    const query = searchQuery.toLowerCase();
-    return guideCards.filter(
-      (card) =>
-        card.title.toLowerCase().includes(query) ||
-        card.description.toLowerCase().includes(query) ||
-        card.category.toLowerCase().includes(query),
-    );
-  }, [searchQuery]);
+  //   const query = searchQuery.toLowerCase();
+  //   return guideCards.filter(
+  //     (card) =>
+  //       card.title.toLowerCase().includes(query) ||
+  //       card.description.toLowerCase().includes(query) ||
+  //       card.category.toLowerCase().includes(query),
+  //   );
+  // }, [searchQuery]);
 
   // Filter recommended guides based on search query
-  const filteredRecommendedGuides = useMemo(() => {
-    if (!recommendedSearchQuery.trim()) {
-      return recommendedGuides;
-    }
+  // const filteredRecommendedGuides = useMemo(() => {
+  //   if (!recommendedSearchQuery.trim()) {
+  //     return recommendedGuides;
+  //   }
 
-    const query = recommendedSearchQuery.toLowerCase();
-    return recommendedGuides.filter(
-      (guide) =>
-        guide.title.toLowerCase().includes(query) ||
-        guide.description.toLowerCase().includes(query) ||
-        guide.technologies.toLowerCase().includes(query) ||
-        guide.language.toLowerCase().includes(query),
-    );
-  }, [recommendedSearchQuery]);
+  //   const query = recommendedSearchQuery.toLowerCase();
+  //   return recommendedGuides.filter(
+  //     (guide) =>
+  //       guide.title.toLowerCase().includes(query) ||
+  //       guide.description.toLowerCase().includes(query) ||
+  //       guide.technologies.toLowerCase().includes(query) ||
+  //       guide.language.toLowerCase().includes(query),
+  //   );
+  // }, [recommendedSearchQuery]);
 
   return (
     <div className="docs-page">

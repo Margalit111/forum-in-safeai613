@@ -15,9 +15,16 @@ interface Organization {
   _id: string;
   name: string;
   description: string;
-  ownerId: any;
+  ownerId: OrganizationOwner;
   isActive: boolean;
 }
+
+interface OrganizationOwner {
+  _id: string;
+  email?: string;
+  name?: string;
+}
+
 
 export default function OrganizationUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -69,9 +76,9 @@ export default function OrganizationUsersPage() {
       );
 
       setUsers(usersResponse.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching organization users:", err);
-      setError(err.response?.data?.error || "Failed to fetch organization users");
+      setError((err as { response?: { data?: { error?: string } } }).response?.data?.error || "Failed to fetch organization users");
     } finally {
       setLoading(false);
     }

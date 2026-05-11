@@ -50,10 +50,10 @@ export default function SafeAIUIPage() {
   const [activeSection, setActiveSection] = useState<Section>(
     initialState.section,
   );
-  const [userRole, setUserRole] = useState<"admin" | "user" | null>(
+  const [userRole] = useState<"admin" | "user" | null>(
     initialState.role,
   );
-  const [currentUser, setCurrentUser] = useState<UserData | null>(
+  const [currentUser] = useState<UserData | null>(
     initialState.user,
   );
 

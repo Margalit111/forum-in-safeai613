@@ -8,6 +8,12 @@ import { Request, Response } from "express";
 import { PromptService } from "../services/promptService";
 import logger from "../logger";
 
+
+function getQueryString(value: unknown, defaultValue = ""): string {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return String(value[0] ?? defaultValue);
+  return defaultValue;
+}
 /**
  * GET /api/prompts
  * Get all prompts (admin only)
@@ -22,14 +28,15 @@ export async function getAllPromptsHandler(req: Request, res: Response) {
   }
 }
 
+
 /**
  * GET /api/prompts/active
  * Get active prompts, optionally filtered by category
  */
 export async function getActivePromptsHandler(req: Request, res: Response) {
   try {
-    const category = req.query.category as string | undefined;
-    const prompts = await PromptService.getActivePrompts(category);
+   const category = req.query.category as string | undefined;
+const prompts = await PromptService.getActivePrompts(category);
     res.json(prompts);
   } catch (error: any) {
     logger.error("Error getting active prompts:", error);
