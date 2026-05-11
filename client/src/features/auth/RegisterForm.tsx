@@ -38,7 +38,7 @@ export default function RegisterForm() {
     profileId: "",
     mode: "BYOK",
   });
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [organizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);

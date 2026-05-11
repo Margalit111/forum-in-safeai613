@@ -1,24 +1,24 @@
-import { useState, useMemo } from "react";
+// import { useState, useMemo } from "react";
 import "../styles/docs-page.css";
 
-interface GuideCard {
-  id: string;
-  title: string;
-  description: string;
-  link: string;
-  category: string;
-}
+// interface GuideCard {
+//   id: string;
+//   title: string;
+//   description: string;
+//   link: string;
+//   category: string;
+// }
 
-interface RecommendedGuide {
-  id: string;
-  title: string;
-  description: string;
-  link: string;
-  duration: string;
-  language: string;
-  technologies: string;
-  rating: string;
-}
+// interface RecommendedGuide {
+//   id: string;
+//   title: string;
+//   description: string;
+//   link: string;
+//   duration: string;
+//   language: string;
+//   technologies: string;
+//   rating: string;
+// }
 
 // Data from the Excel spreadsheet
 // const guideCards: GuideCard[] = [
