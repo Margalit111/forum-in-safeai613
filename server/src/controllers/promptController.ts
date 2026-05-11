@@ -50,8 +50,8 @@ const prompts = await PromptService.getActivePrompts(category);
  */
 export async function getPromptByIdHandler(req: Request, res: Response) {
   try {
-    const { id } = req.params;
-    const prompt = await PromptService.getPromptById(id);
+    const { id } = req.params ;
+    const prompt = await PromptService.getPromptById(id?.toString()||"");
     res.json(prompt);
   } catch (error: any) {
     logger.error("Error getting prompt by ID:", error);
@@ -82,7 +82,7 @@ export async function createPromptHandler(req: Request, res: Response) {
 export async function updatePromptHandler(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const prompt = await PromptService.updatePrompt(id, req.body);
+    const prompt = await PromptService.updatePrompt(id?.toString()||"", req.body);
     res.json(prompt);
   } catch (error: any) {
     logger.error("Error updating prompt:", error);
@@ -99,7 +99,7 @@ export async function updatePromptHandler(req: Request, res: Response) {
 export async function deletePromptHandler(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    await PromptService.deletePrompt(id);
+    await PromptService.deletePrompt(id?.toString()||"");
     res.status(204).send();
   } catch (error: any) {
     logger.error("Error deleting prompt:", error);
