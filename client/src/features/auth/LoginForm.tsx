@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiCall, API_ENDPOINTS } from "../../config/api";
+import { startActivityTracking } from "../../utils/tokenManager";
+import ProfileSelectionModal from "../../components/ProfileSelectionModal";
 
 interface LoginFormData {
   email: string;
@@ -23,6 +25,8 @@ export default function LoginForm() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -58,7 +62,17 @@ export default function LoginForm() {
           if (data.success && data.user) {
             localStorage.setItem("user", JSON.stringify(data.user));
             localStorage.setItem("userRole", data.user.role);
-            navigate("/safeai-ui");
+            
+            // Start activity tracking for token management
+            startActivityTracking();
+            
+            // Check if user has a profile
+            if (!data.user.profileId) {
+              setLoggedInUser(data.user);
+              setShowProfileModal(true);
+            } else {
+              navigate("/safeai-ui");
+            }
           }
         })
         .catch((err) => {
@@ -91,8 +105,18 @@ export default function LoginForm() {
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("userRole", response.user.role);
 
-        // Navigate to dashboard
-        navigate("/safeai-ui");
+        // Start activity tracking for token management
+        startActivityTracking();
+
+        // Check if user has a profile
+        if (!response.user.profileId) {
+          // Show profile selection modal
+          setLoggedInUser(response.user);
+          setShowProfileModal(true);
+        } else {
+          // Navigate to dashboard
+          navigate("/safeai-ui");
+        }
       }
     } catch (err: unknown) {
       console.error("Login error:", err);
@@ -116,8 +140,21 @@ export default function LoginForm() {
     window.location.href = `${API_ENDPOINTS.auth.googleLogin}`;
   };
 
+  const handleProfileSelected = () => {
+    // Navigate to dashboard after profile is selected
+    navigate("/safeai-ui");
+  };
+
   return (
-    <div className="auth-form-container">
+    <>
+      <ProfileSelectionModal
+        isOpen={showProfileModal}
+        onClose={() => {}} // Don't allow closing without selecting
+        userId={loggedInUser?._id || ""}
+        onProfileSelected={handleProfileSelected}
+      />
+      
+      <div className="auth-form-container">
       <div className="auth-form-wrapper">
         <h2 className="auth-title">התחברות</h2>
 
@@ -240,5 +277,6 @@ export default function LoginForm() {
         </div>
       </div>
     </div>
+    </>
   );
 }

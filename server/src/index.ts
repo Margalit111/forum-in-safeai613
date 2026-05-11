@@ -11,6 +11,9 @@ import authRouter from "./routes/authRouter";
 import usageRouter from "./routes/usageRouter";
 import adminStatsRouter from "./routes/adminStatsRouter";
 import proxyKeyRouter from "./routes/proxyKeyRouter";
+import promptRouter from "./routes/promptRouter";
+import organizationRouter from "./routes/organizationRouter";
+import contactRouter from "./routes/contactRouter";
 
 import { requestLogger } from "./middleware/requestLogger";
 import { errorHandler } from "./middleware/errorHandler";
@@ -58,6 +61,9 @@ app.use("/profiles", authenticateToken, profileRouter);
 app.use("/provider-keys", authenticateToken, providerKeyRouter);
 app.use("/proxy-key", proxyKeyRouter); // User's own proxy key management
 app.use("/admin/stats", adminStatsRouter); // Admin stats already has auth middleware
+app.use("/prompts", authenticateToken, promptRouter); // Prompt management (admin routes protected in router)
+app.use("/organizations", organizationRouter); // Organization management (auth middleware in router)
+app.use("/contact", contactRouter); // Contact form (requires authentication)
 
 
 // ===== Public routes for filter evaluation =====

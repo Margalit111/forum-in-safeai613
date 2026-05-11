@@ -35,15 +35,15 @@ router.post("/responses",
       proxyAuth,
   rateLimiter,
     imageGenerationHandler);
-router.post(
-  "/audio/transcriptions",
-  proxyAuth,
-  rateLimiter,
-  upload.single("file"), // שם השדה חייב להיות "file" - תואם OpenAI API
-  audioTranscriptionHandler
-);
-router.post("/audio/speech", 
-   proxyAuth,
-  rateLimiter,
-  audioSpeechHandler);
+// router.post(
+//   "/audio/transcriptions",
+//   proxyAuth,
+//   rateLimiter,
+//   upload.single("file"), // שם השדה חייב להיות "file" - תואם OpenAI API
+//   audioTranscriptionHandler
+// );
+// router.post("/audio/speech", 
+//    proxyAuth,
+//   rateLimiter,
+//   audioSpeechHandler);
 export default router;

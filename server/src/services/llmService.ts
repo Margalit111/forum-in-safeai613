@@ -22,7 +22,7 @@ export async function getLLMDecision(
       messages: [
         {
           role: "system",
-          content: buildFilterPrompt(profileName, profileDesc),
+          content: await buildFilterPrompt(profileName, profileDesc),
         },
         { role: "user", content: text },
       ],

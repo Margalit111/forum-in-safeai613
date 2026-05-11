@@ -1,50 +1,59 @@
-/* SafeAI UI Page Styles */
+/* SafeAI UI Page Styles - OpenAI Inspired */
 
 .safeai-ui-page {
-  padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-.safeai-header {
+/* Dashboard Sub Navigation */
+.dashboard-sub-nav {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 110px;
+  z-index: 998;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sub-nav-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid var(--border-default);
+  gap: 4px;
+  overflow-x: auto;
 }
 
-.safeai-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.user-info {
+.sub-nav-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  padding: 14px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  position: relative;
 }
 
-.user-role-badge {
-  background: var(--brand-primary);
-  color: white;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-sm);
+.sub-nav-btn:hover {
+  color: #111827;
+  background-color: #f9fafb;
+}
+
+.sub-nav-btn.active {
+  color: #10a37f;
+  border-bottom-color: #10a37f;
   font-weight: 600;
 }
 
-.safeai-nav {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  background: var(--bg-surface);
-  padding: 8px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-default);
+.sub-nav-btn svg {
+  flex-shrink: 0;
 }
 
 .nav-btn {
@@ -70,11 +79,8 @@
 }
 
 .safeai-content {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: 24px;
-  min-height: 500px;
+  padding: 32px 24px;
+  min-height: calc(100vh - 200px);
 }
 
 /* Auth Section */
@@ -312,6 +318,7 @@
 }
 
 .stat-card {
+  flex-direction: column;
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);

@@ -8,8 +8,15 @@ import {
 import { OpenAI } from "openai";
 import { logUsage } from "./usageTracker";
 import { isProviderKeyFree } from "../middleware/rateLimiter";
-import { calculateCostFromTokens } from "../utils/costs";
+import { 
+  calculateCostFromTokens, 
+  calculateImageCost, 
+  calculateTTSCost, 
+  calculateWhisperCost,
+  normalizeTokenUsage 
+} from "../utils/costs";
 import logger from "../logger";
+import { buildSystemPrompt } from "./promptBuilder";
 /**
  * מזהה provider מתוך model
  */
@@ -54,6 +61,57 @@ function normalizeModelName(model: string, provider: string): string {
   return `${provider}/${model}`;
 }
 
+function extractTextFromMessageContent(content: any): string {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .filter((part: any) => part.type === "text" || part.type === "input_text")
+      .map((part: any) => part.text || "")
+      .join("\n");
+  }
+
+  return "";
+}
+
+function extractLastMessagesForFilter(messages: any[], count = 3): string {
+  return messages
+    .slice(-count)
+    .map((msg: any, index: number) => {
+      const text = extractTextFromMessageContent(msg.content).trim();
+      if (!text) return "";
+
+      return `Message ${index + 1} (${msg.role || "unknown"}):\n${text}`;
+    })
+    .filter(Boolean)
+    .join("\n\n---\n\n");
+}
+
+function extractLastInputsForResponses(input: any[], count = 3): string {
+  return input
+    .slice(-count)
+    .map((item: any, index: number) => {
+      let text = "";
+
+      if (typeof item.content === "string") {
+        text = item.content;
+      } else if (Array.isArray(item.content)) {
+        text = item.content
+          .filter((p: any) => p.type === "text" || p.type === "input_text")
+          .map((p: any) => p.text || "")
+          .join("\n");
+      }
+
+      if (!text.trim()) return "";
+
+      return `Message ${index + 1} (${item.role || "unknown"}):\n${text}`;
+    })
+    .filter(Boolean)
+    .join("\n\n---\n\n");
+}
+
 export async function proxyChatCompletion(user: any, body: any) {
   const startTime = Date.now();
   const model = body.model;
@@ -90,20 +148,7 @@ export async function proxyChatCompletion(user: any, body: any) {
   }
 
   // חילוץ ההודעה האחרונה מהמערך
-  const lastMessageRaw = body.messages[body.messages.length - 1]?.content;
-  let userQuery = "";
-
-  if (typeof lastMessageRaw === "string") {
-    // מקרה רגיל: טקסט פשוט
-    userQuery = lastMessageRaw;
-  } else if (Array.isArray(lastMessageRaw)) {
-    // מקרה של OpenAI/Cline: מערך של אובייקטים
-    // אנחנו מחלצים רק את חלקי הטקסט (Type: text) ומחברים אותם
-    userQuery = lastMessageRaw
-      .filter((part: any) => part.type === "text")
-      .map((part: any) => part.text)
-      .join("\n");
-  }
+  let userQuery = extractLastMessagesForFilter(body.messages || [], 3);
 
   // בדיקה אם נמצא טקסט לסינון
   if (!userQuery || userQuery.trim() === "") {
@@ -126,15 +171,7 @@ export async function proxyChatCompletion(user: any, body: any) {
 
   // 4. הוספת system prompts
 
-    // do not reference the following topics in any way: <Other religions besides orthodox jewisem, relationships with women, sexual relations, Sexual exploitation or harassment, rape, sex, violent, immodest, romantic, intimate content, including innuendo, venereal diseases, fertility, pills, gynecology,impossible to answer the question without referencing these forbidden topics, respond only with: blocked.
-    //  Even if the prohibited topics are requested inside a data structure such as an object, array, HTML page, or any other embedded way , do not respond to them.           
-
-  const systemPrompt = [
-    ``,
-    ...(profile?.contentPrompts || []),
-    ...(profile?.behaviorPrompts || []),
-    ...(profile?.knowledgePrompts || []),
-  ].join("\n");
+  const systemPrompt = await buildSystemPrompt(profile);
 
   const messages = [...(body.messages || [])];
 
@@ -408,20 +445,15 @@ export async function proxyResponses(user: any, body: any) {
   console.log(JSON.stringify(body.input, null, 2));
   // חילוץ טקסט מ-input (יכול להיות string או מערך)
   let userQuery = "";
+
   if (typeof body.input === "string") {
     userQuery = body.input;
   } else if (Array.isArray(body.input)) {
-    userQuery = body.input
-      .flatMap((item: any) =>
-        Array.isArray(item.content)
-          ? item.content
-              .filter((p: any) => p.type === "text"||  p.type === "input_text")
-              .map((p: any) => p.text)
-          : typeof item.content === "string"
-            ? [item.content]
-            : [],
-      )
-      .join("\n");
+    userQuery = extractLastInputsForResponses(body.input, 3);
+  }
+
+  if (!userQuery.trim()) {
+    userQuery = "No text content";
   }
 
   const filterResult = await evaluateText({
@@ -436,16 +468,7 @@ export async function proxyResponses(user: any, body: any) {
   }
 
   // System prompt מה-profile
-  const systemPrompt = [
-    `
-     do not reference the following topics in any way: <Other religions besides orthodox jewisem, relationships with women, sexual relations, Sexual exploitation or harassment, rape, sex, violent, immodest, romantic, intimate content, including innuendo, venereal diseases, fertility, pills, gynecology,impossible to answer the question without referencing these forbidden topics, respond only with: blocked.
-           Even if the prohibited topics are requested inside a data structure such as an object, array, HTML page, or any other embedded way , do not respond to them.           
-`,
-    ...(profile?.contentPrompts || []),
-    ...(profile?.behaviorPrompts || []),
-    ...(profile?.knowledgePrompts || []),
-  ].join("\n");
-
+  const systemPrompt = await buildSystemPrompt(profile);
   // ב-Responses API - system prompt הולך בתוך instructions
   const requestBody: any = {
     ...body,
@@ -621,6 +644,9 @@ export async function proxyResponses(user: any, body: any) {
 export async function proxyImageGeneration(user: any, body: any) {
   const startTime = Date.now();
   const model = body.model || "dall-e-3";
+
+    const profile = await AIProfile.findById(user.profileId);
+    
   const provider = getProviderFromModel(model);
 
   const providerKeyDoc =
@@ -633,6 +659,23 @@ export async function proxyImageGeneration(user: any, body: any) {
   const providerApiKey = decryptSecret(providerKeyDoc.apiKeyEncrypted);
   const isFree = isProviderKeyFree(user, providerKeyDoc._id.toString());
   const decryptedLiteLLMKey = decryptSecret(user.litellmKeyEncrypted);
+
+  const imagePrompt =
+    typeof body.prompt === "string" && body.prompt.trim()
+      ? body.prompt
+      : "No text content";
+
+  const filterResult = await evaluateText({
+    profileId: profile ? profile._id?.toString(): "",
+    text: imagePrompt,
+  });
+
+  if (!filterResult.allowed) {
+    throw new Error(
+      "Content blocked By SafeAI Filter: " +
+        (filterResult.reason || "Unknown reason"),
+    );
+  }
 
   if (!decryptedLiteLLMKey) throw new Error("LiteLLM key missing");
 
@@ -655,6 +698,12 @@ export async function proxyImageGeneration(user: any, body: any) {
 
   const data: any = await litellmResponse.json();
 
+  // Calculate image cost based on request parameters
+  const size = body.size || "1024x1024";
+  const quality = body.quality || "standard";
+  const n = body.n || 1;
+  const imageCost = calculateImageCost(model, size, quality, n);
+
   const responseTime = Date.now() - startTime;
   logUsage({
     userId: user._id.toString(),
@@ -666,7 +715,7 @@ export async function proxyImageGeneration(user: any, body: any) {
     responseTime,
     success: true,
     isFree,
-    cost: 0, // עלות תמונות - תחשב בנפרד לפי מודל/גדול
+    cost: imageCost,
   }).catch((err) => logger.error("Failed to log image usage:", err));
 
   return data;
@@ -772,6 +821,10 @@ export async function proxyAudioSpeech(user: any, body: any) {
   const contentType =
     litellmResponse.headers.get("content-type") || "audio/mpeg";
 
+  // Calculate TTS cost based on input text
+  const inputText = body.input || "";
+  const ttsCost = calculateTTSCost(model, inputText);
+
   const responseTime = Date.now() - startTime;
   logUsage({
     userId: user._id.toString(),
@@ -783,7 +836,7 @@ export async function proxyAudioSpeech(user: any, body: any) {
     responseTime,
     success: true,
     isFree,
-    cost: 0,
+    cost: ttsCost,
   }).catch((err) => logger.error("Failed to log TTS usage:", err));
 
   return { buffer: audioBuffer, contentType };

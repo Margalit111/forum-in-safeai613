@@ -28,6 +28,7 @@ export async function registerHandler(req: Request, res: Response) {
       password: data.password,
       name: data.name,
       ...(data.organization && { organization: data.organization }),
+      ...(data.organizationId && { organizationId: data.organizationId }),
       ...(data.profileId && { profileId: data.profileId }),
       mode: data.mode,
     });
@@ -37,8 +38,6 @@ export async function registerHandler(req: Request, res: Response) {
       message: "נשלח אימייל אימות לכתובת שהזנת. אנא אמת את האימייל שלך כדי להתחבר.",
       user: result.user,
       proxyApiKey: result.proxyApiKey,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
     });
   } catch (error: any) {
     logger.error("Registration error:", { error: error.message, stack: error.stack });
@@ -65,12 +64,21 @@ export async function loginHandler(req: Request, res: Response) {
       refreshToken: result.refreshToken,
     });
   } catch (error: any) {
-    logger.error("Login error:", { error: error.message, stack: error.stack });
-    res.status(401).json({
-      success: false,
-      error: error.message || "ההתחברות נכשלה",
+    logger.error("Login error:", {
+      error: error.message,
+      stack: error.stack,
     });
-  }
+
+    // ברירת מחדל
+    const statusCode = error.statusCode || 500;
+
+    res.status(statusCode).json({
+      success: false,
+      message: error.message || "ההתחברות נכשלה",
+      code: error.code || "LOGIN_FAILED",
+    });
+  
+   }
 }
 
 /**

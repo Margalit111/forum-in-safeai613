@@ -17,6 +17,7 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "הסיסמה חייבת להכיל לפחות ספרה אחת"),
   name: z.string().min(2, "השם חייב להכיל לפחות 2 תווים"),
   organization: z.string().optional(),
+  organizationId: z.string().min(1, "חובה לבחור ארגון"),
   profileId: z.string().optional(),
   mode: z.enum(["BYOK", "MANAGED"]).default("BYOK"),
 });

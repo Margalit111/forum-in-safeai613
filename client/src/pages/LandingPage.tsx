@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "../styles/landing-page.css";
 import AboutCompany from "../features/landing/AboutCompany";
 import Products from "../features/landing/Products";
@@ -8,7 +7,6 @@ type Section = "about" | "products";
 
 export default function LandingPage() {
   const [activeSection, setActiveSection] = useState<Section>("about");
-  const navigate = useNavigate();
 
   const renderSection = () => {
     switch (activeSection) {
@@ -23,27 +21,41 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
-    
+      {/* Hero Section */}
+      <div className="landing-hero">
+        <h1 className="hero-title">פתרונות בטוחים לשימוש ב-AI</h1>
+        <p className="hero-subtitle">
+          SafeAI מספקת פתרונות מתקדמים לניהול ובקרה של מודלים של בינה מלאכותית
+        </p>
+      </div>
 
-      <nav className="landing-nav">
+      {/* Section Navigation */}
+      <nav className="landing-section-nav">
         <button
-  className="landing-nav-btn"
+          id="guest-section"
+          className={`section-nav-btn ${activeSection === "about" ? "active" : ""}`}
           onClick={() => setActiveSection("about")}
         >
-          לאורח{" "}
+          <div className="section-nav-icon">👤</div>
+          <div className="section-nav-content">
+            <div className="section-nav-title">לאורח</div>
+            <div className="section-nav-desc">מידע כללי על החברה</div>
+          </div>
         </button>
         <button
-          className="landing-nav-btn"
+          id="developer-section"
+          className={`section-nav-btn ${activeSection === "products" ? "active" : ""}`}
           onClick={() => setActiveSection("products")}
         >
-          למפתח{" "}
+          <div className="section-nav-icon">💻</div>
+          <div className="section-nav-content">
+            <div className="section-nav-title">למפתח</div>
+            <div className="section-nav-desc">מוצרים ו-API</div>
+          </div>
         </button>
-        <button className="landing-nav-btn active" onClick={() => navigate("/login")}>
-          לכניסה למערכת &gt;&gt;&gt;
-        </button>
-      
       </nav>
 
+      {/* Content Section */}
       <div className="landing-content">{renderSection()}</div>
     </div>
   );

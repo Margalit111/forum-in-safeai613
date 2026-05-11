@@ -1,10 +1,44 @@
 export default function Products() {
+  const developerVideoUrl = import.meta.env.VITE_DEVELOPER_VIDEO_URL;
+  const developerVideo2Url = import.meta.env.VITE_DEVELOPER_VIDEO2_URL;
+  
   return (
     <div className="products">
       <h2>הפרויקטים שלנו</h2>
       <p className="products-intro">
         פרויקטי קוד פתוח לסינון ושימוש בטוח בבינה מלאכותית - כל הכלים זמינים ב-GitHub
       </p>
+
+      {/* Video Sections */}
+      {developerVideoUrl && (
+        <div className="about-section video-section">
+          <h3>🎥   BYOK ניהול מפתחות עצמאי</h3>
+          <div className="video-container">
+            <iframe
+              src={developerVideoUrl.replace('/view?usp=drive_link', '/preview')}
+              width="100%"
+              height="480"
+              allow="autoplay"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
+      
+      {developerVideo2Url && (
+        <div className="about-section video-section">
+          <h3>🎥   אינטגרציה עם אפליקציות וכלים חיצוניים</h3>
+          <div className="video-container">
+            <iframe
+              src={developerVideo2Url.replace('/view?usp=drive_link', '/preview')}
+              width="100%"
+              height="480"
+              allow="autoplay"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
 
       <div className="products-grid">
         <div className="product-card">

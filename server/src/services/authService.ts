@@ -5,9 +5,18 @@
 
 import bcrypt from "bcryptjs";
 import { User } from "../models/user";
-import { generateTokenPair, generateRandomToken, verifyRefreshToken } from "../utils/jwt";
+import {
+  generateTokenPair,
+  generateRandomToken,
+  verifyRefreshToken,
+} from "../utils/jwt";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../utils/email";
-import { encryptSecret, generateApiKey, getKeyPrefix, hashApiKey } from "../utils/crypto";
+import {
+  encryptSecret,
+  generateApiKey,
+  getKeyPrefix,
+  hashApiKey,
+} from "../utils/crypto";
 import axios from "axios";
 import logger from "../logger";
 
@@ -21,6 +30,7 @@ export async function register(data: {
   password: string;
   name: string;
   organization?: string;
+  organizationId?: string;
   profileId?: string;
   mode?: "BYOK" | "MANAGED";
 }) {
@@ -61,7 +71,7 @@ export async function register(data: {
           "Content-Type": "application/json",
         },
         timeout: 5000,
-      }
+      },
     );
 
     const { key, token, key_name } = response.data;
@@ -73,6 +83,7 @@ export async function register(data: {
       password: hashedPassword,
       name: data.name,
       ...(data.organization && { organization: data.organization }),
+      ...(data.organizationId && { organizationId: data.organizationId }),
       ...(data.profileId && { profileId: data.profileId }),
       mode: data.mode || "BYOK",
       role: "user", // Always start as user, admin can promote later
@@ -86,31 +97,36 @@ export async function register(data: {
       verificationTokenExpires,
     });
 
-    // Send verification email
-    await sendVerificationEmail(user.email, verificationToken, user.name || undefined);
-
-    // Generate JWT tokens
-    const tokens = generateTokenPair({
-      userId: user._id.toString(),
+    logger.info("Before sending verification email", {
       email: user.email,
-      role: user.role,
     });
 
-    // Save refresh token to user
-    user.refreshTokens = [tokens.refreshToken];
+    // Send verification email
+    await sendVerificationEmail(
+      user.email,
+      verificationToken,
+      user.name || undefined,
+    );
+
+    logger.info("After sending verification email", {
+      email: user.email,
+    });
+
+    // Don't generate tokens yet - user must verify email first
     await user.save();
 
     return {
       user,
       proxyApiKey, // Return this only once!
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
     };
   } catch (error: any) {
     const errorDetail = error.response?.data || error.message;
-    logger.error("Registration failed:", { error: errorDetail.message, stack: errorDetail.stack });
+    logger.error("Registration failed:", {
+      error: errorDetail.message,
+      stack: errorDetail.stack,
+    });
     throw new Error(
-      `ההרשמה נכשלה: ${error.message || "שגיאה בתקשורת עם השרת"}`
+      `ההרשמה נכשלה: ${error.message || "שגיאה בתקשורת עם השרת"}`,
     );
   }
 }
@@ -122,23 +138,42 @@ export async function login(email: string, password: string) {
   // Find user
   const user = await User.findOne({ email: email.toLowerCase() });
   if (!user) {
-    throw new Error("אימייל או סיסמה שגויים");
+    throw {
+      statusCode: 401,
+      code: "INVALID_CREDENTIALS",
+      message: "אימייל או סיסמה שגויים",
+    };
+    // throw new Error("אימייל או סיסמה שגויים");
   }
 
   // Check password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    throw new Error("אימייל או סיסמה שגויים");
+    throw {
+      statusCode: 401,
+      code: "INVALID_CREDENTIALS",
+      message: "אימייל או סיסמה שגויים",
+    };
+    // throw new Error("אימייל או סיסמה שגויים");
   }
 
   // Check if email is verified
   if (!user.emailVerified) {
-    throw new Error("נא לאמת את כתובת האימייל שלך לפני ההתחברות");
+    throw {
+      statusCode: 403,
+      code: "EMAIL_NOT_VERIFIED",
+      message: "נא לאמת את כתובת האימייל שלך לפני ההתחברות",
+    };
+    // throw new Error("נא לאמת את כתובת האימייל שלך לפני ההתחברות");
   }
 
   // Check if user is active
   if (!user.isActive) {
-    throw new Error("החשבון שלך אינו פעיל. אנא פנה לתמיכה");
+    throw {
+      statusCode: 403,
+      code: "USER_NOT_ACTIVE",
+      message: "החשבון שלך אינו פעיל. אנא פנה לתמיכה",
+    };
   }
 
   // Update last login
