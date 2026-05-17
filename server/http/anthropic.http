@@ -1,6 +1,6 @@
 POST http://localhost:3001/v1/messages
 Content-Type: application/json
-Authorization: Bearer  sk-safeai-895850300bc8c085b644c9fda0b5768cd5254b4ba42e2081
+Authorization: Bearer  sk-safeai-???
 anthropic-version: 2023-06-01
 
 {
@@ -20,7 +20,7 @@ anthropic-version: 2023-06-01
 
 POST http://localhost:3001/v1/messages/count_tokens
 Content-Type: application/json
-Authorization: Bearer  sk-safeai-895850300bc8c085b644c9fda0b5768cd5254b4ba42e2081
+Authorization: Bearer  sk-safeai-??????
 anthropic-version: 2023-06-01
 
 {
