@@ -1,0 +1,69 @@
+###
+
+POST http://localhost:3001/v1/messages
+Authorization: Bearer sk-safeai-???
+Content-Type: application/json
+anthropic-version: 2023-06-01
+
+{
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 100,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Explain TypeScript in detail with examples"
+    }
+  ]
+}
+###
+
+POST http://localhost:3001/v1/messages
+Authorization: Bearer sk-safeai-???
+Content-Type: application/json
+anthropic-version: 2023-06-01
+
+{
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 100,
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is aws in 3 words?"
+    }
+  ]
+}
+
+
+###
+
+POST http://localhost:4000/v1/messages
+Authorization: Bearer LITELLM KEY
+Content-Type: application/json
+anthropic-version: 2023-06-01
+
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "max_tokens": 100,
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is aws in 3 words?"
+    }
+  ]
+}
+
+###
+
+POST http://localhost:3001/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer sk-safeai-???
+
+{
+  "model": "gpt-5.4-mini",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is aws in 3 words?"
+    }
+  ]
+}

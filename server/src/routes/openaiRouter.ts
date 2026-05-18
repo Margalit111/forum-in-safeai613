@@ -5,6 +5,11 @@ import { rateLimiter } from "../middleware/rateLimiter";
 import { responsesHandler } from "../controllers/openaiController";
 import multer from "multer"; // npm install multer @types/multer
 
+import {
+  anthropicMessagesHandler,
+  anthropicCountTokensHandler,
+  anthropicModelsHandler,
+} from "../controllers/anthropicController";
 
 const router = express.Router();
 
@@ -46,4 +51,14 @@ router.post("/responses",
 //    proxyAuth,
 //   rateLimiter,
 //   audioSpeechHandler);
+
+
+
+// ===== Anthropic Compatible Routes for Claude Code =====
+router.post("/messages", proxyAuth, anthropicMessagesHandler);
+router.post("/messages/count_tokens", proxyAuth, anthropicCountTokensHandler);
+router.get("/models", proxyAuth, anthropicModelsHandler);
+
+
+
 export default router;

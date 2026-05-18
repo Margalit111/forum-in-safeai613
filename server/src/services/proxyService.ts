@@ -8,12 +8,12 @@ import {
 import { OpenAI } from "openai";
 import { logUsage } from "./usageTracker";
 import { isProviderKeyFree } from "../middleware/rateLimiter";
-import { 
-  calculateCostFromTokens, 
-  calculateImageCost, 
-  calculateTTSCost, 
+import {
+  calculateCostFromTokens,
+  calculateImageCost,
+  calculateTTSCost,
   calculateWhisperCost,
-  normalizeTokenUsage 
+  normalizeTokenUsage,
 } from "../utils/costs";
 import logger from "../logger";
 import { buildSystemPrompt } from "./promptBuilder";
@@ -61,6 +61,34 @@ function normalizeModelName(model: string, provider: string): string {
   return `${provider}/${model}`;
 }
 
+function getLiteLLMCost(response: Response, data?: any): number | undefined {
+  // 1. הכי אמין - headers של LiteLLM
+  const headerCost =
+    response.headers.get("x-litellm-response-cost-original") ||
+    response.headers.get("x-litellm-response-cost");
+
+  if (headerCost) {
+    const parsed = Number(headerCost);
+    if (!Number.isNaN(parsed)) {
+      logger.info(`💰 Using LiteLLM header cost: $${parsed}`);
+      return parsed;
+    }
+  }
+
+  // 2. fallback - body
+  const bodyCost = data?._hidden_params?.response_cost ?? data?.response_cost;
+
+  if (bodyCost !== undefined && bodyCost !== null) {
+    const parsed = Number(bodyCost);
+    if (!Number.isNaN(parsed)) {
+      logger.info(`💰 Using LiteLLM body cost: $${parsed}`);
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
 function extractTextFromMessageContent(content: any): string {
   if (typeof content === "string") {
     return content;
@@ -89,6 +117,66 @@ function extractLastMessagesForFilter(messages: any[], count = 3): string {
     .join("\n\n---\n\n");
 }
 
+function isAgentNoiseForFilter(text: string): boolean {
+  const lower = text.toLowerCase();
+
+  return (
+    lower.includes("<system-reminder>") ||
+    lower.includes("</system-reminder>") ||
+    lower.includes("todowrite tool") ||
+    lower.includes("you did not use a tool") ||
+    lower.includes("<environment_details>") ||
+    lower.includes("<tool_use_instructions>") ||
+    lower.includes("tool output for") ||
+    lower.includes("attempt_completion") ||
+    lower.includes("ask_followup_question") ||
+    lower.includes("current mode act mode") ||
+    lower.includes("visible files") ||
+    lower.includes("open tabs") ||
+    lower.includes("tool_name:") ||
+    lower.includes("begin_arg:") ||
+    lower.includes("end_arg")
+  );
+}
+
+function extractUserIntentForFilter(messages: any[], count = 3): string {
+  const cleanUserMessages = messages
+    .filter((msg: any) => msg.role === "user")
+    .map((msg: any) => {
+      return {
+        role: msg.role || "user",
+        text: extractTextFromMessageContent(msg.content).trim(),
+      };
+    })
+    .filter((msg) => msg.text)
+    .filter((msg) => !isAgentNoiseForFilter(msg.text));
+
+  const selectedMessages =
+    cleanUserMessages.length > 0
+      ? cleanUserMessages.slice(-count)
+      : messages
+          .map((msg: any) => {
+            return {
+              role: msg.role || "unknown",
+              text: extractTextFromMessageContent(msg.content).trim(),
+            };
+          })
+          .filter((msg) => msg.text)
+          .filter((msg) => !isAgentNoiseForFilter(msg.text))
+          .slice(-count);
+  logger.info(`Hello!!!!!!!!!!!!!!:`);
+  selectedMessages.forEach((msg, index) =>
+    logger.info(
+      `Message ${index + 1} (${msg.role}): ${msg.text.substring(0, 100)}...`,
+    ),
+  );
+
+  return selectedMessages
+    .map((msg, index) => {
+      return `Message ${index + 1} (${msg.role}):\n${msg.text}`;
+    })
+    .join("\n\n---\n\n");
+}
 function extractLastInputsForResponses(input: any[], count = 3): string {
   return input
     .slice(-count)
@@ -367,14 +455,13 @@ export async function proxyChatCompletion(user: any, body: any) {
   // Fix: Calculate cost properly - if LiteLLM doesn't provide cost, calculate from tokens
   // Normalize model name to include provider prefix for cost calculation
   const normalizedModel = normalizeModelName(model, provider);
-  let cost = data?._hidden_params?.response_cost;
-  if (!cost || cost === 0) {
+  let cost = getLiteLLMCost(litellmResponse, data);
+
+  if (cost === undefined) {
     cost = calculateCostFromTokens(data.usage, normalizedModel);
     logger.info(
-      `💰 LiteLLM didn't provide cost, calculated from tokens using model: ${normalizedModel}: $${cost.toFixed(6)}`,
+      `💰 LiteLLM cost missing, calculated from tokens using model: ${normalizedModel}: $${cost.toFixed(6)}`,
     );
-  } else {
-    logger.info(`💰 Using LiteLLM provided cost: $${cost.toFixed(6)}`);
   }
 
   logger.debug("✅ Response received from LiteLLM:");
@@ -608,10 +695,13 @@ export async function proxyResponses(user: any, body: any) {
   };
 
   const normalizedModel = normalizeModelName(model, provider);
-  let cost = data?._hidden_params?.response_cost;
-  if (!cost || cost === 0) {
+  let cost = getLiteLLMCost(litellmResponse, data);
+
+  if (cost === undefined) {
     cost = calculateCostFromTokens(usageNormalized, normalizedModel);
-    logger.info(`💰 Calculated cost from tokens: $${cost.toFixed(6)}`);
+    logger.info(
+      `💰 LiteLLM cost missing, calculated from tokens: $${cost.toFixed(6)}`,
+    );
   }
 
   logger.debug("✅ Responses API response received");
@@ -645,8 +735,8 @@ export async function proxyImageGeneration(user: any, body: any) {
   const startTime = Date.now();
   const model = body.model || "dall-e-3";
 
-    const profile = await AIProfile.findById(user.profileId);
-    
+  const profile = await AIProfile.findById(user.profileId);
+
   const provider = getProviderFromModel(model);
 
   const providerKeyDoc =
@@ -666,7 +756,7 @@ export async function proxyImageGeneration(user: any, body: any) {
       : "No text content";
 
   const filterResult = await evaluateText({
-    profileId: profile ? profile._id?.toString(): "",
+    profileId: profile ? profile._id?.toString() : "",
     text: imagePrompt,
   });
 
@@ -840,4 +930,150 @@ export async function proxyAudioSpeech(user: any, body: any) {
   }).catch((err) => logger.error("Failed to log TTS usage:", err));
 
   return { buffer: audioBuffer, contentType };
+}
+
+export async function proxyAnthropicMessages(user: any, body: any) {
+  const startTime = Date.now();
+  const model = body.model;
+
+  if (!model) {
+    throw new Error("Model is required");
+  }
+
+  const provider = getProviderFromModel(model);
+
+  const providerKeyDoc =
+    user.mode === "MANAGED"
+      ? await getSystemProviderKey(provider)
+      : await getProviderKeyByUserAndProvider(user._id.toString(), provider);
+
+  if (!providerKeyDoc) {
+    throw new Error(`Provider key missing for provider: ${provider}`);
+  }
+
+  const providerApiKey = decryptSecret(providerKeyDoc.apiKeyEncrypted);
+  const isFree = isProviderKeyFree(user, providerKeyDoc._id.toString());
+
+  const decryptedLiteLLMKey = decryptSecret(user.litellmKeyEncrypted);
+  if (!decryptedLiteLLMKey) {
+    throw new Error("LiteLLM Proxy Key could not be decrypted or is missing");
+  }
+
+  const profile = await AIProfile.findById(user.profileId);
+  if (!profile) {
+    throw new Error("Profile not found");
+  }
+
+  let userQuery = extractUserIntentForFilter(body.messages || [], 3);
+
+  if (!userQuery || userQuery.trim() === "") {
+    userQuery = "No text content";
+  }
+
+  const result = await evaluateText({
+    profileId: profile._id?.toString(),
+    text: userQuery,
+  });
+
+  if (!result.allowed) {
+    throw new Error(
+      "Content blocked By SafeAI Filter: " +
+        (result.reason || "Unknown reason"),
+    );
+  }
+
+  const systemPrompt = await buildSystemPrompt(profile);
+
+  const requestBody: any = {
+    ...body,
+    model: normalizeModelName(model, provider),
+    api_key: providerApiKey,
+  };
+
+  if (systemPrompt) {
+    requestBody.system = body.system
+      ? `${systemPrompt}\n\n${body.system}`
+      : systemPrompt;
+  }
+
+  logger.debug("--- DEBUG ANTHROPIC MESSAGES REQUEST ---");
+  logger.debug("🔑 Provider:", provider);
+  logger.debug("🔑 Model:", requestBody.model);
+  logger.debug("🌊 Stream:", body.stream ?? false);
+
+  const litellmResponse = await fetch(
+    `${process.env.LITELLM_PROXY_URL}/v1/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${decryptedLiteLLMKey}`,
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify(requestBody),
+    },
+  );
+
+  if (!litellmResponse.ok) {
+    const errorText = await litellmResponse.text();
+
+    logger.error("❌ LiteLLM Anthropic Messages Error:", {
+      error: errorText,
+      stack: errorText,
+    });
+
+    throw new Error(`LiteLLM anthropic messages request failed: ${errorText}`);
+  }
+
+  if (body.stream) {
+    const stream = litellmResponse.body;
+    if (!stream) {
+      throw new Error("Failed to get Anthropic stream body");
+    }
+
+    return stream;
+  }
+
+  const data: any = await litellmResponse.json();
+
+  const usageNormalized = {
+    prompt_tokens: data.usage?.input_tokens || 0,
+    completion_tokens: data.usage?.output_tokens || 0,
+    total_tokens:
+      (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
+  };
+
+  const normalizedModel = normalizeModelName(model, provider);
+
+  let cost = getLiteLLMCost(litellmResponse, data);
+
+  if (cost === undefined) {
+    logger.info("💰 LiteLLM cost missing, calculating from tokens");
+
+    cost = calculateCostFromTokens(usageNormalized, normalizedModel);
+  }
+
+  const responseTime = Date.now() - startTime;
+
+  try {
+    await logUsage({
+      userId: user._id.toString(),
+      profileId: user.profileId?.toString(),
+      provider,
+      modelName: model,
+      mode: user.mode,
+      response: { ...data, usage: usageNormalized },
+      responseTime,
+      success: true,
+      isFree,
+      cost,
+    });
+  } catch (logError: any) {
+    logger.error(
+      "❌ Failed to log anthropic messages usage:",
+      logError.message,
+    );
+  }
+
+  return data;
 }
