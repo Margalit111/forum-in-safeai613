@@ -205,7 +205,7 @@ export default function RecommendedGuidesPage() {
           <div className="curator-info">
 
             <div className="curator-details">
-              <strong>נערך על ידי: מרים קנר</strong>
+              <strong>נערך על ידי: מרים ק.</strong>
               <p className="curator-tagline">
                 צרו קשר לפיתוח, הטמעה והנחיית AI בארגון שלכם
               </p>

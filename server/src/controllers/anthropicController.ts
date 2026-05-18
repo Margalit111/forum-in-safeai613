@@ -1,47 +1,32 @@
 import { Request, Response } from "express";
-import {
-  anthropicToOpenAIChatBody,
-  estimateAnthropicTokens,
-  openAIToAnthropicMessage,
-} from "../services/anthropicAdapter";
-import { proxyChatCompletion } from "../services/proxyService";
+import { estimateAnthropicTokens } from "../services/anthropicAdapter";
+import { proxyAnthropicMessages} from "../services/proxyService";
 import logger from "../logger";
 
 export async function anthropicMessagesHandler(req: Request, res: Response) {
   try {
-    logger.info("Anthropic request debug:", {
-      model: req.body.model,
-      stream: req.body.stream,
-      hasTools: Array.isArray(req.body.tools),
-      toolsCount: Array.isArray(req.body.tools) ? req.body.tools.length : 0,
-      toolNames: Array.isArray(req.body.tools)
-        ? req.body.tools.map((tool: any) => tool.name)
-        : [],
-      lastMessageRole: req.body.messages?.at?.(-1)?.role,
-      lastMessageContentType: Array.isArray(
-        req.body.messages?.at?.(-1)?.content,
-      )
-        ? "array"
-        : typeof req.body.messages?.at?.(-1)?.content,
-    });
+    const data = await proxyAnthropicMessages((req as any).user, req.body);
 
-    const originalModel = req.body.model;
+    if (req.body.stream) {
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
 
-    const openAIBody = anthropicToOpenAIChatBody(req.body);
+      return res.status(200).send(data);
+    }
 
-    const data = await proxyChatCompletion((req as any).user, openAIBody);
-
-    const anthropicResponse = openAIToAnthropicMessage(data, originalModel);
-
-    return res.status(200).json(anthropicResponse);
+    return res.status(200).json(data);
   } catch (error: any) {
     logger.error("Anthropic messages error:", {
       error: error.message,
       stack: error.stack,
     });
 
-    // SafeAI filter blocked the request
-    if (error.message?.includes("Content blocked By SafeAI Filter")) {
+    if (
+      error.message?.includes(
+        "Content blocked By SafeAI Filter",
+      )
+    ) {
       return res.status(200).json({
         id: `msg_${Date.now()}`,
         type: "message",
@@ -62,17 +47,17 @@ export async function anthropicMessagesHandler(req: Request, res: Response) {
       });
     }
 
-    // Other API errors
     return res.status(500).json({
       type: "error",
       error: {
         type: "api_error",
-        message: error.message || "Anthropic messages request failed",
+        message:
+          error.message ||
+          "Anthropic messages request failed",
       },
     });
   }
 }
-
 export async function anthropicCountTokensHandler(req: Request, res: Response) {
   try {
     const result = estimateAnthropicTokens(req.body);
