@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import {
   createEmbedding,
-  evaluateText,
   getEmbeddings,
 } from "../services/filterService";
 
@@ -9,6 +8,7 @@ import {
   createProfile,
   getProfiles,
 } from "../services/profileService";
+import { evaluateText } from "../workflows/input/evaluate";
 
 export async function healthHandler(_req: Request, res: Response) {
   res.send("AI Filter Service running");
