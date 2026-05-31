@@ -1,27 +1,25 @@
 /**
  * server/src/services/filterService.ts
  *
- * Business logic for creating embeddings and evaluating text against
- * user-defined AI profiles and embedding categories.
+ * הערכת טקסט מול פרופיל. הלוגיקה עברה ל-input workflow;
+ * הקובץ הזה נשאר נקודת הכניסה ושומר את ה-EvaluationLog (כולל trace).
  */
 
-import OpenAI from "openai";
 import logger from "../logger";
 import { Embedding } from "../models";
-import {
-  getEmbeddingVectorsByCategory,
-  addEmbeddingToCache,
-} from "../cache/embeddingCache";
-import { getLLMDecision } from "./llmService";
-import { cosineSimilarity } from "../utils/cosineSimilarity";
+import { addEmbeddingToCache } from "../cache/embeddingCache";
 import {
   EmbeddingRequest,
   EvaluateRequest,
   EvaluateResponse,
 } from "../types/proxyTypes";
-
 import { openai } from "../config/openai";
 import { getFullProfileById } from "../repositories/profileRepository";
+
+import { runInputFilter } from "../workflows/input/inputFilterWorkflow";
+import { NodeTrace } from "../workflows/types";
+
+/* ---------- Embeddings (לא בשימוש בזרימה הנוכחית, נשמר לעתיד) ---------- */
 
 export async function getEmbeddings(categories: string[] = []) {
   return Embedding.find({ category: { $in: categories } });
@@ -42,115 +40,4 @@ export async function createEmbedding(req: EmbeddingRequest) {
 
   await Embedding.create({ category, originText, vector });
   addEmbeddingToCache(category, vector);
-}
-
-export async function evaluateText(
-  req: EvaluateRequest,
-): Promise<EvaluateResponse> {
-  const { profileId, text, auditDisabled } = req;
-
-  if (!profileId || !text) {
-    throw new Error("profileId and text are required");
-  }
-
-  const { EvaluationLog } = await import("../models");
-
-  const profile = await getFullProfileById(profileId);
-  if (!profile) {
-    throw new Error("AIProfile not found");
-  }
-
-  //----------------Embedding Filter (Futute)----------------
-  // const response = await openai.embeddings.create({
-  //   model: "text-embedding-3-small",
-  //   input: text,
-  // });
-
-  // const inputVector = response.data?.[0]?.embedding;
-  // if (!inputVector) {
-  //   throw new Error("Embedding failed");
-  // }
-
-  // let bestAllowed = 0;
-  // let bestBlocked = 0;
-
-  // for (const category of profile.allowedCategories ?? []) {
-  //   const vectors = getEmbeddingVectorsByCategory(category);
-  //   for (const vector of vectors) {
-  //     const score = cosineSimilarity(inputVector, vector);
-  //     if (score > bestAllowed) bestAllowed = score;
-  //   }
-  // }
-
-  // for (const category of profile.blockedCategories ?? []) {
-  //   const vectors = getEmbeddingVectorsByCategory(category);
-  //   for (const vector of vectors) {
-  //     const score = cosineSimilarity(inputVector, vector);
-  //     if (score > bestBlocked) bestBlocked = score;
-  //   }
-  // }
-
-  // const diff = bestAllowed - bestBlocked;
-
-  // logger.info(
-  //   `Profile=${profile.name} | allowed=${bestAllowed.toFixed(4)} blocked=${bestBlocked.toFixed(4)} diff=${diff.toFixed(
-  //     4,
-  //   )}`,
-  // );
-
-  let finalAllowed = false;
-  let reason = "low-confidence";
-
-  // if (bestBlocked > profile.thresholdBlocked && bestBlocked > bestAllowed) {
-  //   reason = "blocked-category";
-  // } else if (
-  //   bestAllowed > profile.thresholdAllowed &&
-  //   diff > profile.similarityMargin
-  // ) {
-  //   finalAllowed = true;
-  //   reason = "passed-vector";
-  // }
-
-  // if (!finalAllowed) {
-  if (!auditDisabled) {
-    logger.info(
-      "Low confidence or blocked by vector. Consulting GPT-4o-mini...",
-    );
-  }
-
-  // const isSafeByLLM = true;
-  const profileDesc =
-    "allowed categories:" +
-    (profile.allowedCategories ?? []).join(", ") +
-    " " +
-    "blocked categories:" +
-    (profile.blockedCategories ?? []).join(", ");
-
-  logger.info("profileDesc: " + profileDesc);
-
-  
-  const isSafeByLLM = await getLLMDecision(text, profile.name, profileDesc);
-
-  if (isSafeByLLM) {
-    finalAllowed = true;
-    reason = "allowed-by-llm";
-  } else {
-    reason = "blocked-by-llm";
-  }
-  // }
-
-  if (!auditDisabled) {
-    await EvaluationLog.create({
-      profileId: profile._id,
-      text,
-      vectorScores: {},
-      initialDecision: reason,
-      llmFinalDecision: finalAllowed ? "allowed" : "blocked",
-    });
-  }
-
-  return {
-    allowed: finalAllowed,
-    reason,
-  };
 }

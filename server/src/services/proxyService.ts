@@ -1,4 +1,3 @@
-import { evaluateText } from "./filterService";
 import { AIProfile } from "../models";
 import { decryptSecret } from "../utils/crypto";
 import {
@@ -17,6 +16,7 @@ import {
 } from "../utils/costs";
 import logger from "../logger";
 import { buildSystemPrompt } from "./promptBuilder";
+import { guardInput } from "../workflows/proxyFilter";
 /**
  * מזהה provider מתוך model
  */
@@ -201,7 +201,7 @@ function extractLastInputsForResponses(input: any[], count = 3): string {
 }
 
 export async function proxyChatCompletion(user: any, body: any) {
-  const startTime = Date.now();
+  
   const model = body.model;
 
   if (!model) {
@@ -237,25 +237,16 @@ export async function proxyChatCompletion(user: any, body: any) {
 
   // חילוץ ההודעה האחרונה מהמערך
   let userQuery = extractLastMessagesForFilter(body.messages || [], 3);
+  if (!userQuery || userQuery.trim() === "") userQuery = "No text content";
 
-  // בדיקה אם נמצא טקסט לסינון
-  if (!userQuery || userQuery.trim() === "") {
-    // אם אין טקסט (למשל רק קובץ/תמונה), אפשר להחליט אם לחסום או להמשיך
-    // כאן בחרתי להמשיך עם טקסט ריק כדי לא לשבור את הזרימה אם אין "שאלה"
-    userQuery = "No text content";
-  }
-
-  const result = await evaluateText({
-    profileId: profile ? profile._id?.toString() : "",
+  const blocked = await guardInput({
+    profile,
     text: userQuery,
+    model,
+    api: "chat",
+    stream: body.stream,
   });
-
-  if (!result.allowed) {
-    throw new Error(
-      "Content blocked By SafeAI Filter: " +
-        (result.reason || "Unknown reason"),
-    );
-  }
+  if (blocked) return blocked;
 
   // 4. הוספת system prompts
 
@@ -286,6 +277,10 @@ export async function proxyChatCompletion(user: any, body: any) {
   logger.debug("---------------------------");
   logger.debug("🚀 DEPLOYMENT CHECK: Version 1.0.5 - Headers: api-key present");
 
+  logger.debug("🔑 LiteLLM URL:", process.env.LITELLM_PROXY_URL);
+  logger.debug("🔑 LiteLLM Key (last 4):", decryptedLiteLLMKey?.slice(-4));
+  logger.debug("🔑 LiteLLM Key length:", decryptedLiteLLMKey?.length);
+  const startTime = Date.now();
   const litellmResponse = await fetch(
     `${process.env.LITELLM_PROXY_URL}/v1/chat/completions`,
     {
@@ -508,7 +503,7 @@ export async function proxyResponses(user: any, body: any) {
   if (!model) throw new Error("Model is required");
 
   const provider = getProviderFromModel(model);
-  console.log("Responses provider", provider);
+
 
   const providerKeyDoc =
     user.mode === "MANAGED"
@@ -529,30 +524,22 @@ export async function proxyResponses(user: any, body: any) {
   const profile = await AIProfile.findById(user.profileId);
   if (!profile) throw new Error("Profile not found");
 
-  console.log(JSON.stringify(body.input, null, 2));
-  // חילוץ טקסט מ-input (יכול להיות string או מערך)
-  let userQuery = "";
+  let userQuery =
+    typeof body.input === "string"
+      ? body.input
+      : Array.isArray(body.input)
+        ? extractLastInputsForResponses(body.input, 3)
+        : "";
+  if (!userQuery.trim()) userQuery = "No text content";
 
-  if (typeof body.input === "string") {
-    userQuery = body.input;
-  } else if (Array.isArray(body.input)) {
-    userQuery = extractLastInputsForResponses(body.input, 3);
-  }
-
-  if (!userQuery.trim()) {
-    userQuery = "No text content";
-  }
-
-  const filterResult = await evaluateText({
-    profileId: profile._id?.toString(),
+  const blocked = await guardInput({
+    profile,
     text: userQuery,
+    model,
+    api: "responses",
+    stream: body.stream,
   });
-  if (!filterResult.allowed) {
-    throw new Error(
-      "Content blocked By SafeAI Filter: " +
-        (filterResult.reason || "Unknown reason"),
-    );
-  }
+  if (blocked) return blocked;
 
   // System prompt מה-profile
   const systemPrompt = await buildSystemPrompt(profile);
@@ -755,17 +742,13 @@ export async function proxyImageGeneration(user: any, body: any) {
       ? body.prompt
       : "No text content";
 
-  const filterResult = await evaluateText({
-    profileId: profile ? profile._id?.toString() : "",
+  const blocked = await guardInput({
+    profile,
     text: imagePrompt,
+    model,
+    api: "chat",
   });
-
-  if (!filterResult.allowed) {
-    throw new Error(
-      "Content blocked By SafeAI Filter: " +
-        (filterResult.reason || "Unknown reason"),
-    );
-  }
+  if (blocked) return blocked;
 
   if (!decryptedLiteLLMKey) throw new Error("LiteLLM key missing");
 
@@ -965,22 +948,16 @@ export async function proxyAnthropicMessages(user: any, body: any) {
   }
 
   let userQuery = extractUserIntentForFilter(body.messages || [], 3);
+  if (!userQuery || userQuery.trim() === "") userQuery = "No text content";
 
-  if (!userQuery || userQuery.trim() === "") {
-    userQuery = "No text content";
-  }
-
-  const result = await evaluateText({
-    profileId: profile._id?.toString(),
+  const blocked = await guardInput({
+    profile,
     text: userQuery,
+    model,
+    api: "anthropic",
+    stream: body.stream,
   });
-
-  if (!result.allowed) {
-    throw new Error(
-      "Content blocked By SafeAI Filter: " +
-        (result.reason || "Unknown reason"),
-    );
-  }
+  if (blocked) return blocked;
 
   const systemPrompt = await buildSystemPrompt(profile);
 

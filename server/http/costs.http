@@ -1,7 +1,7 @@
 ###
 
 POST http://localhost:3001/v1/messages
-Authorization: Bearer sk-safeai-???
+Authorization: Bearer sk-safeai-6???
 Content-Type: application/json
 anthropic-version: 2023-06-01
 
@@ -56,14 +56,14 @@ anthropic-version: 2023-06-01
 
 POST http://localhost:3001/v1/chat/completions
 Content-Type: application/json
-Authorization: Bearer sk-safeai-???
+Authorization: Bearer sk-safeai-68e1???
 
 {
   "model": "gpt-5.4-mini",
   "messages": [
     {
       "role": "user",
-      "content": "What is aws in 3 words?"
+      "content": "  What is AWS?`"
     }
   ]
 }
