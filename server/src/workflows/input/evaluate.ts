@@ -50,18 +50,19 @@ export async function evaluateText(
         vectorScores: {},
         initialDecision: result.reason,
         llmFinalDecision: result.allowed ? "allowed" : "blocked",
-        trace: result.trace, // ודאי שהשדה קיים בסכמה (אופציונלי)
-        blockedBy: result.blockedBy,
+        trace: result.trace as unknown as Record<string, unknown>[],
+        ...(result.blockedBy !== undefined ? { blockedBy: result.blockedBy } : {}),
       });
     } catch (err: any) {
       logger.error("Failed to write EvaluationLog: " + err?.message);
     }
   }
 
-  return {
+  const ret: EvaluateResponse & { blockedBy?: string; trace?: NodeTrace[] } = {
     allowed: result.allowed,
     reason: result.reason,
-    blockedBy: result.blockedBy,
     trace: result.trace,
   };
+  if (result.blockedBy !== undefined) ret.blockedBy = result.blockedBy;
+  return ret;
 }

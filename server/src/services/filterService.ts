@@ -16,7 +16,7 @@ import {
 import { openai } from "../config/openai";
 import { getFullProfileById } from "../repositories/profileRepository";
 
-import { runInputFilter } from "../workflows/input/inputFilterWorkflow";
+import { runInputWorkflow } from "../workflows/input/inputFilterWorkflow";
 import { NodeTrace } from "../workflows/types";
 
 /* ---------- Embeddings (לא בשימוש בזרימה הנוכחית, נשמר לעתיד) ---------- */

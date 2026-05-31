@@ -17,7 +17,8 @@ export interface EvaluationLogDoc extends mongoose.Document {
   initialDecision: string;
   llmFinalDecision: string;
   isManuallyReviewed: boolean;
-
+  blockedBy?: string;
+  trace?: Record<string, unknown>[];
 }
 
 const EvaluationLogSchema = new mongoose.Schema(
@@ -31,6 +32,8 @@ const EvaluationLogSchema = new mongoose.Schema(
     initialDecision: String,
     llmFinalDecision: String,
     isManuallyReviewed: { type: Boolean, default: false },
+    blockedBy: { type: String },
+    trace: { type: [mongoose.Schema.Types.Mixed] },
   },
   { timestamps: true },
 );

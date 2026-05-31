@@ -82,7 +82,7 @@ export async function runGuardPipeline(
         durationMs,
         input: ctx.text,
         output: { verdict: result.verdict, reason: result.reason },
-        metadata: result.metadata,
+        metadata: result.metadata ?? {},
       };
       trace.push(entry);
       logStep(workflowName, entry, { profileId: ctx.profileId });
