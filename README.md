@@ -1,97 +1,38 @@
-# Project Monorepo (Client + Server)
+# Forum Platform Integration (SAFEAI613)
 
-Monorepo containing:
-- **client/**: React + Vite + TypeScript
-- **server/**: Node.js + Express + TypeScript
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![AWS S3](https://img.shields.io/badge/AWS_S3-FF9900?style=for-the-badge&logo=amazon-s3&logoColor=white)
 
-## Repository Structure
+# Forum Platform Integration (SAFEAI613)
 
-```
-/
-├─ client/
-├─ server/
-└─ .github/
-   └─ workflows/
-```
+An advanced, high-performance community forum integrated into the SAFEAI613 platform, featuring modern UI/UX, agentic AI capabilities, and semantic search.
 
-## Prerequisites
-- Node.js **18+** (recommended 20)
-- npm (or your chosen package manager)
+> **Status:** Work in Progress (Active Development) 🚀
 
-## Setup
+---
 
-### 1) Install dependencies
+## 🛠️ My Key Contributions & Features
+While this project is integrated into a larger platform, **I single-handedly designed, architected, and developed** the following components:
 
-**Client**
-```bash
-cd client
-npm install
-```
+* **Core Forum Engine:** Built the responsive frontend (TypeScript/React) and integrated backend services, supporting hierarchical comment trees, ratings, and admin moderation tools.
+* **Agentic AI Assistant (Python):** Developed an autonomous background agent that monitors platform activity and automatically generates targeted daily posts during low-activity windows to drive engagement.
+* **Intelligent Writing Assistant:** Integrated LLM APIs to provide real-time suggestions for post titles, content refinement, and auto-tagging.
+* **Semantic Search & Recommendation:** Implemented vector embeddings to power conceptual search and dynamic related-posts recommendations.
+* **Media Storage (AWS S3):** Engineered secure media uploads with client and server-side validation.
+* **Dockerization & DevOps:** Containerized the forum services to ensure consistent local development and deployment.
 
-**Server**
-```bash
-cd ../server
-npm install
-```
+---
 
-## Run locally
+## 💻 Tech Stack Used
+* **Frontend:** TypeScript, React (or state your specific framework)
+* **Backend:** Python, Node.js
+* **Cloud & DevOps:** AWS S3, Docker, Git
+* **AI & Data:** OpenAI/Gemini APIs, Vector Embeddings
 
-### Client (Vite dev server)
-```bash
-cd client
-npm run dev
-```
+---
 
-### Server (Express)
-```bash
-cd server
-npm start
-```
-
-> Note: If you want the client to call the server locally, set the API base URL in the client env file (see below).
-
-## Environment Variables
-
-Create env files locally (not committed).  
-We keep an example file in the repo:
-
-- `client/.env.example`
-- `server/.env.example`
-
-### Suggested env keys
-
-**client**
-- `VITE_API_URL=http://localhost:3000`
-
-**server**
-- `PORT=3000`
-
-## Workflow (Team)
-
-### Branching
-- `main` is protected (no direct pushes)
-- Work is done on `feature/<name>` branches
-
-### Pull Requests
-- Every change goes through a PR
-- CI must pass before merge
-- Resolve conflicts in your feature branch before opening/merging PR
-
-## CI (planned / required)
-CI runs on Pull Requests and should include:
-- install dependencies
-- build client + server
-- run tests (when added)
-
-## Contributing
-1. Create a feature branch from `main`
-2. Commit changes with clear messages
-3. Open a Pull Request
-4. Address review comments and CI failures
-5. Merge after approval
-
-## License
-Add a license file if needed.
-
-
- cd '/var/www/ai613/console'
+## 📝 Acknowledgments & Credits
+The base platform and framework of SAFEAI613 are part of a collaborative environment. This repository showcases my specific integration, architecture, and features as detailed above.
